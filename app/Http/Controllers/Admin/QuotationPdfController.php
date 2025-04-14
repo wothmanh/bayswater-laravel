@@ -28,7 +28,17 @@ class QuotationPdfController extends Controller
             'course_start_date' => 'required|date',
             'course_duration_weeks' => 'required|integer|min:1',
             'accommodation_id' => 'nullable|exists:accommodations,id',
-            'accommodation_duration_weeks' => 'nullable|required_with:accommodation_id|integer|min:1',
+            'accommodation_duration_weeks' => [
+                'nullable',
+                'required_with:accommodation_id',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($value > $request->input('course_duration_weeks')) {
+                        $fail('Accommodation duration cannot exceed course duration.');
+                    }
+                }
+            ],
             'client_birthday' => 'nullable|date',
             'client_nationality_country_id' => 'nullable|exists:countries,id',
             'selected_addons' => 'nullable|array',
@@ -122,7 +132,17 @@ class QuotationPdfController extends Controller
             'course_start_date' => 'required|date',
             'course_duration_weeks' => 'required|integer|min:1',
             'accommodation_id' => 'nullable|exists:accommodations,id',
-            'accommodation_duration_weeks' => 'nullable|required_with:accommodation_id|integer|min:1',
+            'accommodation_duration_weeks' => [
+                'nullable',
+                'required_with:accommodation_id',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($value > $request->input('course_duration_weeks')) {
+                        $fail('Accommodation duration cannot exceed course duration.');
+                    }
+                }
+            ],
             'client_birthday' => 'nullable|date',
             'client_nationality_country_id' => 'nullable|exists:countries,id',
             'selected_addons' => 'nullable|array',
