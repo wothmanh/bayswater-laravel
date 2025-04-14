@@ -1034,27 +1034,37 @@
 
                 console.log('Synchronizing accommodation duration with course duration:', courseDuration);
 
-                // If accommodation duration is greater than course duration or not set, set it to course duration
-                if (isNaN(currentAccommodationDuration) || currentAccommodationDuration > courseDuration) {
-                    // Find the option that matches the course duration
-                    let optionFound = false;
-                    for (let i = 0; i < accommodationDurationSelect.options.length; i++) {
-                        if (parseInt(accommodationDurationSelect.options[i].value) === courseDuration) {
-                            accommodationDurationSelect.selectedIndex = i;
-                            optionFound = true;
-                            console.log('Set accommodation duration to match course duration:', courseDuration);
-                            break;
-                        }
-                    }
+                // Check if we need to repopulate the dropdown
+                let needsRepopulation = false;
 
-                    // If no matching option was found, we need to repopulate the dropdown
-                    if (!optionFound && !isNaN(courseDuration)) {
-                        console.log('No matching option found for course duration, repopulating dropdown');
-                        populateAccommodationWeeks();
-                    }
-                } else {
-                    console.log('Accommodation duration already valid (less than or equal to course duration)');
+                // Case 1: Course duration increased beyond available options
+                const maxAvailableOption = getMaxAvailableAccommodationWeek();
+                if (courseDuration > maxAvailableOption) {
+                    console.log('Course duration increased beyond available options. Max available:', maxAvailableOption);
+                    needsRepopulation = true;
                 }
+
+                // Case 2: Accommodation duration exceeds course duration
+                if (!isNaN(currentAccommodationDuration) && currentAccommodationDuration > courseDuration) {
+                    console.log('Accommodation duration exceeds course duration');
+                    needsRepopulation = true;
+                }
+
+                // Case 3: No accommodation duration selected
+                if (isNaN(currentAccommodationDuration)) {
+                    console.log('No accommodation duration selected');
+                    needsRepopulation = true;
+                }
+
+                // Repopulate if needed
+                if (needsRepopulation) {
+                    console.log('Repopulating accommodation weeks dropdown');
+                    populateAccommodationWeeks();
+                    return; // populateAccommodationWeeks will handle selection
+                }
+
+                // If we get here, we don't need to repopulate, just update the existing options
+                console.log('Updating existing accommodation duration options');
 
                 // Disable options that exceed course duration
                 Array.from(accommodationDurationSelect.options).forEach(option => {
@@ -1070,12 +1080,18 @@
                         }
                     }
                 });
+            }
 
-                // Trigger change event on accommodation duration to update calculations
-                // Only if the value was actually changed
-                if (accommodationDurationSelect.value !== currentAccommodationDuration.toString() && !isNaN(currentAccommodationDuration)) {
-                    accommodationDurationSelect.dispatchEvent(new Event('change'));
-                }
+            // Helper function to get the maximum available accommodation week option
+            function getMaxAvailableAccommodationWeek() {
+                let max = 0;
+                Array.from(accommodationDurationSelect.options).forEach(option => {
+                    const value = parseInt(option.value);
+                    if (!isNaN(value) && value > max) {
+                        max = value;
+                    }
+                });
+                return max;
             }
 
             // Add event listener for course duration select
@@ -1134,9 +1150,11 @@
                     console.log('No valid course duration. Using default max: ' + maxAccommodationWeeks);
                 }
 
-                // Get the old selected value if any
+                // Get the current selected value if any
+                const currentValue = accommodationDurationSelect.value;
                 const oldValue = '{{ old("accommodation_duration_weeks") }}';
-                console.log('Old accommodation weeks value: ' + oldValue);
+                console.log('Current accommodation weeks value: ' + currentValue);
+                console.log('Old accommodation weeks value from form: ' + oldValue);
                 let valueSelected = false;
 
                 // Populate dropdown options
@@ -1155,8 +1173,13 @@
                         option.textContent = `${i} week${i > 1 ? 's' : ''}`;
                     }
 
-                    // Select the old value if it matches
-                    if (oldValue && parseInt(oldValue) === i) {
+                    // First try to select the current value if it matches
+                    if (currentValue && parseInt(currentValue) === i) {
+                        option.selected = true;
+                        valueSelected = true;
+                    }
+                    // If no current value, try the old form value
+                    else if (!valueSelected && oldValue && parseInt(oldValue) === i) {
                         option.selected = true;
                         valueSelected = true;
                     }
@@ -1188,6 +1211,12 @@
                         accommodationDurationSelect.selectedIndex = 1; // Select the first week option
                         console.log('No course duration set, selected first accommodation duration option');
                     }
+                }
+
+                // Trigger change event if the value has changed
+                if (currentValue && accommodationDurationSelect.value !== currentValue) {
+                    console.log('Accommodation duration changed from', currentValue, 'to', accommodationDurationSelect.value);
+                    accommodationDurationSelect.dispatchEvent(new Event('change'));
                 }
 
                 return valueSelected;
