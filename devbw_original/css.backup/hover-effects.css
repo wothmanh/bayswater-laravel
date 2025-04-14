@@ -1,0 +1,21 @@
+ul.hfer {padding:0; margin:0; display: inline-block;}
+ul.hfer li {display: inline-block; list-style:none; padding:10px; margin:10px; line-height:10px; width:150px; height:150px; overflow:hidden; border:1px solid #d2d2d2;-moz-border-radius: 5px;
+-webkit-border-radius: 5px; background:#ececec;}
+/*dynamically added*/
+div.wrapper, div.wrapper2 {width:150px; height:150px; overflow:hidden; position:relative;  }
+div.wrapper:hover, div.wrapper2:hover {
+	cursor: pointer;
+}
+div.wrapper img, div.wrapper2 img {
+	width: 100%;
+	height: 100%;
+}
+ul li div.caption {font-family:'IM Fell English SC', arial; font-weight:bold; font-size:20px; position:relative; text-align:center; line-height: 12px; padding:28px 0 0 0px; background:url(../img/grunge.png); min-height:125px; color:#fff; letter-spacing:-1px;}
+
+
+
+
+
+
+
+

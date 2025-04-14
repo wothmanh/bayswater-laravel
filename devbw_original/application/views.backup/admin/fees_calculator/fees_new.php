@@ -1,0 +1,616 @@
+<section class="content-header">
+    <div class="row">
+
+    
+    
+
+        <div class="col-xs-12">
+            <div class="row">
+                <div class="col-xs-6">
+                    <div class="box" >
+                        <div class="box-header ">
+                            <h3 class="box-title">Fees calculator</h3>
+                        </div><!-- /.box-header -->
+                        <div class="box-body table-responsive no-padding" id="course_input">
+<form action="<?php echo site_url('fees_calculator/submit'); ?>" method="POST" enctype="multipart/form-data" id="myFormgetmypdfclient">
+
+ 
+                            <div class="box-body">
+                                <h4 class="box-title ersbdtt1">Course options</h4>
+                                <div id="cropterrors"></div>
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Region</label>
+                                    <div style="font-size: 11px;font-weight: bold;color: red;margin-bottom: 10px;">It's very IMPORTANT to select the region otherwise all calculations will be wrong!!!!!!</div>
+                                    <?php echo form_dropdown('c_region_id', $regions_all, set_value('c_region_id', ''), 'class="form-control" onchange="region_onchange(this);" id="slc_region"'); ?>
+                                </div>
+                             
+                                <!--<div class="form-group">-->
+                                <!--    <label for="exampleInputEmail1">Student Date of Birth</label>-->
+                                <!--    <div style="font-size: 11px;font-weight: bold;color: red;margin-bottom: 10px;">If the student is under 18 years old, select his D.O.B to calculate his guardianship fees.</div>-->
+                                <!--    <div class="input-group">-->
+                                <!--        <?php echo form_input(array('name' => 'birthdayhelper', 'value'=> set_value('birthdayhelper', '2006-04-30'), 'onchange' => 'birthday_helper_onchange(this)', 'class' => 'form-control','id' => 'nrmdatepicker2', 'data-date-format' => 'yyyy-mm-dd' , 'autocomplete'=>'off' )); ?>-->
+                                <!--        <span class="input-group-addon lftbr1"><i class="fa fa-calendar"></i></span>-->
+                                <!--    </div>-->
+                                <!--</div>-->
+                                
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Country</label>
+                                    <?php echo form_dropdown('c_country_id', $countries_all, set_value('c_country_id', ''), 'class="form-control" onchange="country_onchange(this);" disabled id="slc_county"'); ?>
+                                </div>
+                                <div class="form-group" id="city_id">
+                                    <label for="exampleInputEmail1">City</label>
+                                    <?php echo form_dropdown('c_city_id', $cities_all, set_value('c_city_id', ''), 'class="form-control" onchange="city_onchange(this);"  disabled id="slc_city"'); ?>
+                                </div>
+                                <div class="form-group" id="centre_id">
+                                    <label for="exampleInputEmail1">Centre</label>
+                                    <?php echo form_dropdown('c_school_id', $centers_all, set_value('c_school_id', ''), 'class="form-control" onchange="centre_onchange(this);" id="slc_centre" disabled'); ?>
+                                </div>
+                                <div class="form-group" id="course_id">
+                                    <label for="exampleInputEmail1">Course</label>
+                                    <?php echo form_dropdown('course_id', $courses_all, set_value('course_id', ''), 'class="form-control" onchange="course_onchange(this);" id="slc_course" disabled'); ?>
+                                </div>
+                                <div class="form-group" style="width:50%;float:left;" id="course_start_id">
+                                    <label for="exampleInputEmail1">Start Date</label>
+                                    <div class="input-group">
+                                        <?php echo form_input(array('name' => 'date2', 'value'=> set_value('date2', ''), 'onchange' => 'course_start_onchange(this)' , 'disabled' => 'disabled' , 'class' => 'form-control','id' => 'datepickersemester', 'data-date-format' => 'yyyy-mm-dd', 'style'=> 'display:none', 'autocomplete'=>'off' )); ?>
+                                        <?php echo form_input(array('name' => 'date', 'value'=> set_value('date', ''), 'onchange' => 'course_start_onchange(this)' , 'disabled' => 'disabled' , 'class' => 'form-control','id' => 'datepicker-autoclose', 'data-date-format' => 'yyyy-mm-dd', 'autocomplete'=>'off' )); ?>
+                                        <span class="input-group-addon lftbr1"><i class="fa fa-calendar"></i></span>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="width:45%;float:left;margin-left:5%;" id="course_weeks_id">
+                                    <label for="exampleInputEmail1">Number of Weeks</label>
+                                    <?php echo form_dropdown('slc_couse_weeks', $weeks_all, set_value('slc_couse_weeks', ''), 'class="form-control" disabled onchange="course_weeks_onchange(this);" id="slc_couse_weeks" '); ?>
+                                    
+                                    <select name="slc_couse_weeks2" class="form-control" onchange="course_weeks_onchange(this);" id="slc_couse_weeks2" style="display:none">
+                                        <option value="" selected="selected">- - Please Select - -</option>
+                                    </select>
+                                
+                                </div><div class="clear"></div>
+
+                                <h4 class="box-title ersbdtt1">Accommodation options</h4>
+
+                                <div class="form-group" id="accommodation_id">
+                                    <label for="exampleInputEmail1">Accommodation</label>
+                                    <?php echo form_dropdown('slc_accommodation', $accommodation_all, set_value('slc_accommodation', ''), 'class="form-control" disabled onchange="accommodation_onchange(this);" id="slc_accommodation"'); ?>
+                                </div>
+                                <div class="form-group" id="accommodation_weeks_id">
+                                    <label for="exampleInputEmail1">Accommodation weeks <span id="accwkstmd" style="color: red;margin-left: 10px;font-weight: normal; display:none;"> Must be equol or less than course weeks number </span></label> 
+                                    <?php echo form_dropdown('slc_acco_weeks', $weeks_one, set_value('slc_acco_weeks', ''), 'class="form-control" onchange="accommodation_weeks_onchange(this);" disabled id="slc_acco_weeks"'); ?>
+                                </div> 
+                                <div class="form-group" id="insurance_id">
+                                    <label for="exampleInputEmail1">Courier fee - Must add for I-20 delivery fee for USA F1 visa or Custodianship letter from Canada</label>
+                                    <?php echo form_dropdown('slc_aramex', $courier_fee, set_value('slc_aramex', ''), 'class="form-control" onchange="aramex_onchange(this);" disabled id="slc_aramex"'); ?>
+                                </div>                               
+                                <h4 class="box-title ersbdtt1" style="margin-top:25px;">Optional extras</h4>
+
+                                <div class="form-group" id="insurance_id">
+                                    <label for="exampleInputEmail1">Travel Insurance</label>
+                                    <?php echo form_dropdown('slc_insurance', $medical_insurance, set_value('slc_insurance', ''), 'class="form-control" onchange="insurance_onchange(this);" disabled id="slc_insurance"'); ?>
+                                </div>
+                                
+                                <div class="form-group" style="width:50%;float:left;" id="airport_arr_id">
+                                    <label for="exampleInputEmail1">Airport transfers Arrival:</label>
+                                        <?php echo form_dropdown('slc_airport_arr', $airports_arr_all, set_value('slc_airport_arr', ''), 'class="form-control" onchange="airport_arr_onchange(this);" disabled id="slc_airport_arr"'); ?>
+                                </div>
+                                <div class="form-group" style="width:45%;float:left;margin-left:5%;" id="airport_dep_id">
+                                    <label for="exampleInputEmail1">Airport transfers Departure:</label>
+                                    <?php echo form_dropdown('slc_airport_dep', $airports_dep_all, set_value('slc_airport_dep', ''), 'class="form-control" onchange="airport_dep_onchange(this);" disabled id="slc_airport_dep"'); ?>
+                                </div><div class="clear"></div>
+                                
+                            </div>  
+                        </div><!-- /.box-body -->                  
+
+
+                     
+
+
+ <div class="box-body table-responsive no-padding" id="client_input">
+        <h4 class="box-title ersbdtt1"> Client Information </h4>
+        
+        <div id="clinfoerrors"></div>
+
+        <input type="hidden" name="pdf_get_valclient" id="pdf_get_valclient" value="" />
+
+        <label for="exampleInputFile"> Client picture <span style="color:red">allowed type jpg,png </span></label><br>
+                <div class="hpgerpho">
+                    <div class="form-group btn btn-primary btn-file" >
+                        <br><img id="wst_bc_2ca" src="" style='width:200px'><br><br>
+                        <input type="file" id="exampleInputFile " name="img" onchange="loadFile_lca(event)">
+                        <div>Change Picture</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="exampleInputEmail1">File number</label>
+                    <?php echo form_input(array('name' => 'file_num', 'value'=> set_value('file_num', ''), 'class' => 'form-control' )); ?>
+                </div>
+
+                <div class="form-group">
+                    <label for="exampleInputEmail1">First name</label>
+                    <?php echo form_input(array('name' => 'first_name', 'value'=> set_value('first_name', ''), 'class' => 'form-control', 'id' => 'first_name' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Last name</label>
+                    <?php echo form_input(array('name' => 'last_name', 'value'=> set_value('last_name', ''), 'class' => 'form-control', 'id' => 'last_name' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Gender</label>
+                    <?php echo form_dropdown('gender', $genders, set_value('gender', ''), 'class="form-control"'); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Birthday</label>
+                    <div class="input-group">
+                        <?php echo form_input(array('name' => 'birthday', 'value'=> set_value('birthday', ''),  'class' => 'form-control','id' => 'nrmdatepicker', 'data-date-format' => 'yyyy-mm-dd' )); ?>
+                        <span class="input-group-addon lftbr1"><i class="fa fa-calendar"></i></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Email</label>
+                    <?php echo form_input(array('name' => 'email', 'value'=> set_value('email', ''), 'class' => 'form-control' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Address</label>
+                    <?php echo form_input(array('name' => 'address', 'value'=> set_value('address', ''), 'class' => 'form-control' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">City</label>
+                    <?php echo form_input(array('name' => 'city', 'value'=> set_value('city', ''), 'class' => 'form-control' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Country</label>
+                    <?php $country_all = $this->libre->country(); 
+                    echo form_dropdown('country', $country_all, set_value('country', ''), 'class="form-control"'); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Phone</label>
+                    <?php echo form_input(array('name' => 'phone', 'value'=> set_value('phone', ''), 'class' => 'form-control' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Where did you heard about us</label>
+                    <?php echo form_input(array('name' => 'heard_about_us', 'value'=> set_value('heard_about_us', ''), 'class' => 'form-control' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Visa type</label>
+                    <?php echo form_dropdown('visa_type', $visa_types, set_value('visa_type', ''), 'class="form-control"'); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputFile">Passport</label>
+                    <input type="file" id="exampleInputFile " name="passport" >
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputFile">Certificates</label>
+                    <input type="file" id="exampleInputFile " name="certificates">
+                    <p class="help-block" style="color:red">Put all your certificates in rar or zip file than upload it</p>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Post code</label>
+                    <?php echo form_input(array('name' => 'post_code', 'value'=> set_value('post_code', ''), 'class' => 'form-control' )); ?>
+                </div>
+
+        <h4 class="box-title ersbdtt1"> Payment </h4>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Currency</label>
+                    <?php echo form_dropdown('currency_id', $currency_all, set_value('currency_id', ''), 'class="form-control"  id="currency_id"'); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Course price</label>
+                    <?php echo form_input(array('name' => 'course_price', 'value'=> set_value('course_price', ''), 'class' => 'form-control' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Pay</label>
+                    <?php echo form_input(array('name' => 'he_pay', 'value'=> set_value('he_pay', ''), 'class' => 'form-control' )); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">State</label>
+                    <?php echo form_dropdown('active', $status, set_value('active', ''), 'class="form-control"'); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Registered from</label>
+                    <?php echo form_dropdown('registered_from', $registered_from, set_value('registered_from', ''), 'class="form-control"'); ?>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Registered type</label>
+                    <?php echo form_dropdown('registered_type', $registered_type, set_value('registered_type', ''), 'class="form-control"'); ?>
+                </div>
+
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Note</label>
+                    <?php echo form_textarea(array('name' => 'note', 'value'=> set_value('note', ''), 'class' => 'form-control' )); ?>
+                </div>
+                
+
+
+
+    
+                            </div><!-- /.box-body -->
+
+
+                    </div><!-- /.box -->
+
+
+
+<div id="first_button1">
+                    <button class="btnsmall12 btn btn-primary " id="next_page">  Next </button> 
+                </div>
+
+                <div id="second_button1">
+                    <button class="btnsmall12 btn btn-primary " id="prev_page">  Previous </button>
+                    <button id="submitformclientifn" class="btnsmall12 btn btn-primary " >  Submit </button> 
+                </div>
+
+</form>
+
+
+
+
+                </div>
+                <div class="col-xs-6">
+                
+                    <div class="box quotebckcl1">
+                        <div class="box-header ">
+                            <h3 class="box-title">Your quote</h3>
+                        </div><!-- /.box-header -->
+                        <div class="box-body table-responsive no-padding">
+                            
+                            <h4 class="box-title ersbdtt2" id="firstblock" data-cousetype="0" data-coursestart="0" data-ercourseid="0" data-courseweek="0" data-courseprice="0" data-regifee="0"  data-currencyname="" data-currencyprice="" >Course</h4>
+                            <hr class="quote_hr1">
+                            <div class="qtdiv43">
+                                <div class="cal_country_name"></div>
+                                <div class="cal_city_name"></div>
+                                <div class="cal_centre_name"></div>
+                                <div class="cal_course_name" ></div>
+                                <div class="cal_course_date"></div>
+                                <div class=" vh greenText"></div>
+                                <div class="HolderDscCourseFixed vh greenText">
+                                    <span class="HolderDscCourseFixedText greenText"></span> 
+                                    <span class="flt_right HolderDscCourseFixedAmount greenText"></span>
+                                </div>
+                                <div class="HolderDscCourse vh greenText">
+                                    <span class="HolderDscCourseText greenText"></span> 
+                                    <span class="flt_right HolderDscCourseAmount greenText"></span>
+                                </div>
+                                <div>
+                                    <span class="cal_course_weeks" ></span> 
+                                    <span class="flt_right cal_course_weeks_price"></span>
+                                </div>
+                                
+                                <div class="HolderDscRegistrationFee vh greenText">
+                                    <span class="cal_registration_fee" >Registration fee waived</span> 
+                                    <span class="flt_right">
+                                        - <span class="registrationFeeVal greenText"></span>
+                                    </span>
+                                </div>
+                                <div class="registrationFeeRow vh">
+                                    <span class="cal_registration_fee" >Enrolment fee (non-refundable)</span> 
+                                    <span class="flt_right registrationFeeVal"></span>
+                                </div>
+                                <div class="bankChargesRow vh">
+                                    <span class="cal_registration_fee" >Bank charges</span> 
+                                    <span class="flt_right bankChargesVal"></span>
+                                </div>
+                                <div class="summerblock vh" >
+                                    <span class="cal_summer_supp" >Summer supp.</span> <br>
+                                    <span class="cal_summer_note"></span> 
+                                    <div class="txt_right cal_summer_supp_price"></div>
+                                </div>
+                                <hr class="quote_hr1 sub1Row vh">
+                                <div class="sublfls sub1Row vh">
+                                    <span class="subtotaltxt1"> Sub Total </span> 
+                                    <span class="subtotaltxt1 flt_right"><span class="sub1Val">00.00</span></span> 
+                                </div>
+                                 
+                            </div>
+                            <div style="background:#3D3F44;">
+                                <h4 class="box-title ersbdtt2" id="secondblock" data-accoid="0" data-accoweek="0" data-accoprice="0" data-accofee="0" >Accommodation</h4>
+                                <hr class="quote_hr1">
+                                <div class="qtdiv44 qtdiv441" >
+                                    <div class="HolderDscAccommoFixed vh greenText">
+                                        <span class="HolderDscAccommoFixedText greenText"></span> 
+                                        <span class="flt_right HolderDscAccommoFixedAmount greenText"></span>
+                                    </div>
+                                    <div class="cal_acco_name" ></div>
+                                    <div class="HolderDscAccommo vh greenText">
+                                        <span class="HolderDscAccommoText greenText"></span> 
+                                        <span class="flt_right HolderDscAccommoAmount greenText"></span>
+                                    </div>
+                                    <div >
+                                        <span class="cal_acco_weeks" ></span> 
+                                        <span class="flt_right cal_acco_weeks_price"></span>
+                                    </div>
+                                    <div class="HolderDscAccommoFee vh greenText">
+                                        <span class="cal_acco_fee greenText" >Accommodation Placement fee waived</span> 
+                                        <span class="flt_right greenText">
+                                            - <span class="cal_acco_fee_price greenText"></span>
+                                        </span>
+                                    </div>
+                                    <div class="accommodationFeeRow vh">
+                                        <span class="cal_acco_fee">Accommodation placement (non-refundable)</span> 
+                                        <span class="flt_right cal_acco_fee_price"></span>
+                                    </div>
+                                    <div class="vh" id="custodianshipFeeRow">
+                                        <span class="cal_acco_fee">Custodianship fee</span> 
+                                        <span class="flt_right cal_custodianship_fee_price"></span>
+                                    </div>
+                                    <div class="vh" id="guardianshipFeeRow">
+                                        <span class="cal_acco_fee">Guardianship fee</span> 
+                                        <span class="flt_right cal_acco_guardianship_fee_price"></span>
+                                    </div>
+                                    <div class="vh" id="christmasRow">
+                                        <span class="cal_acco_fee">Christmas</span> 
+                                        <span class="flt_right cal_acco_christmas_price"></span>
+                                    </div>
+                                    <div class="accoSummerblock vh">
+                                        <span class="ccal_summer_supp" >Summer supp.</span> <br>
+                                        <span class="ccal_summer_note"></span> 
+                                        <div class="txt_right ccal_summer_supp_price"></div>
+                                    </div>
+                                    <hr class="quote_hr1 sub2Row vh">
+                                    <div class="accm_sublfls sub2Row vh">
+                                        <span class="subtotaltxt1"> Sub Total </span> 
+                                        <span class="subtotaltxt1 flt_right"><span class="cal_sub_total_acco sub2Val">00.00</span> </span> 
+                                    </div> 
+                                </div>
+                            </div>                            
+
+                            <h4 class="box-title ersbdtt2" style="margin-top:2px;" id="thirdblock" data-arriprice="0" data-deparprice="0" data-insuranceprice="0" data-booksfee="0" data-aramexfee="0" >Optional extras</h4>
+                            <hr class="quote_hr1">
+                            <div class="qtdiv44">
+                                    <div class="airportRow vh">
+                                        <span>Airport transfers</span>
+                                        <div>
+                                            <span class="cal_airp_arr"></span> 
+                                            <span class="flt_right cal_airp_arr_price"></span>
+                                            <div class="HolderDscArrival vh greenText">
+                                                <span class="greenText">Free Arrival Transfer</span> 
+                                                <span class="flt_right greenText">
+                                                    - <span class="cal_airp_arr_price greenText"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="cal_airp_dep"></span> 
+                                            <span class="flt_right cal_airp_dep_price"></span>
+                                        </div>
+                                    </div>
+                                    <div class="insuranceRow vh">
+                                        <span>Travel Insurance : </span> 
+                                        <span class="cal_insurance" ></span> 
+                                        <span class="flt_right cal_insurance_price"></span>
+                                    </div>
+                                    <div class="booksRow vh">
+                                        <span class="cal_books">my.Bayswater access and study resources</span> 
+                                        <span class="flt_right cal_books_price"></span>
+                                    </div>
+                                    <div class="aramexRow vh">
+                                        <span class="cal_aramex">Courier fee</span> 
+                                        <span class="flt_right cal_aramex_price"></span>
+                                    </div>
+
+                                    <hr class="quote_hr1 sub3Row vh">
+                                    <div class="accm_sublflsse sub3Row vh">
+                                        <span class="subtotaltxt1"> Sub Total </span> 
+                                        <span class="subtotaltxt1 flt_right"><span class="cal_sub_total_extra sub3Val">00.00</span> </span> 
+                                    </div> 
+
+                            </div>
+
+
+                            <div class="calc_res_ttl">
+                                <span>Total:</span>
+                                <span class="flt_right"><span class="fnltotal">00.00</span></span>
+                            </div>
+                            
+
+
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+                
+
+
+            </div><!-- /.row -->
+
+
+
+        </div>
+
+
+        <div class="col-xs-12 mt20">
+            <div class="box printdiv" id="printedBlock">
+                <div class="box-header boheader55">
+                    <h3 class="box-title">Result</h3>
+                    <button class="btnsmall12 btn btn-primary link_add_new" id="pdf_it" > <i class="fa fa-file-pdf-o"></i> Download </button>
+                    <button class="btnsmall12 btn btn-primary link_add_new" id="print_it" > <i class="fa fa-print"></i> Print </button>
+                           
+                </div><!-- /.box-header -->
+                <div class="box-body table-responsive no-padding" id="printable">
+                    <div id="wbstlogo">
+                        <img id="wbstlogoimg" src="<?php echo $this->config->item('base_url2'),'img/',$settings->logo; ?>">
+                    </div>
+
+                    <table class="table table-bordered p_result_tbl" id="printable_table">
+                         <tbody>
+
+                            <tr>
+                                <th class="colLabel">Course</th>
+                                <td class="colInfo">
+                                    <div class="print_country_name" id="prtd_country">
+                                        <strong>Country:</strong>
+                                        <span class="valueCentre cal_country_name"></span>
+                                    </div>
+                                    <div class="print_city_name" id="prtd_city">
+                                        <strong>City:</strong>
+                                        <span class="valueCentre cal_city_name"></span>
+                                    </div>
+                                    <div class="print_center_name" id="prtd_centre">
+                                        <strong>Centre:</strong>
+                                        <span class="valueCentre cal_centre_name"></span>
+                                    </div>
+                                    <div class="print_course_name" id="prtd_course">
+                                        <strong>Course:</strong>
+                                        <span class="valueCentre cal_course_name"></span>
+                                    </div>
+                                    <div class="valueDatesWrap print_course_date" id="prtd_course_date">
+                                        <strong>Starting Date:</strong>
+                                        <span class="valueDates cal_course_date"></span>
+                                        <br>
+                                    </div>                    
+                                    <div class="valueDurationWrap print_course_weeks" id="prtd_course_weeks">
+                                        <strong>Weeks:</strong>
+                                        <span class="valueDuration cal_course_weeks"></span>
+                                        <br>
+                                    </div>   
+                                    <div class="HolderDscCourse HolderDscCourseText vh greenText"></div>                                 
+                                    <div class="HolderDscCourseFixed HolderDscCourseFixedText vh greenText"></div>                                 
+                                </td>
+                                <td class="colPrice" style="vertical-align:inherit;position:relative" align="center" nowrap>
+                                    <span class="feesCourse cal_course_weeks_price"></span>
+                                    <div class="greenText" style="position:absolute;bottom:0;text-align:center;width:100%;">
+                                        <div class="HolderDscCourse HolderDscCourseAmount vh greenText"></div>                         
+                                        <div class="HolderDscCourseFixed HolderDscCourseFixedAmount vh greenText"></div> 
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="print_summer_supp" id="prtd_course_summer_sup">
+                                <th class="colLabel" nowrap>Summer suppl.</th>
+                                <td class="colInfo cal_summer_note"> </td>          
+                                <td class="colPrice" align="center"><span class="feessummer cal_summer_supp_price"></span></td>
+                            </tr> 
+                            <tr class="print_regis_fees registrationFeeRow" id="prtd_registration_fees">
+                                <th class="colLabel">Enrolment fee (non-refundable)</th>                               
+                                <td class="colInfo"> 
+                                    </br>  
+                                    <div class="HolderDscRegistrationFee vh greenText"> Registration fee waived </div>  
+                                </td>          
+                                <td class="colPrice" align="center">
+                                    <div class="feesreg registrationFeeVal"></div>
+                                    <div class="HolderDscRegistrationFee vh greenText">
+                                        - <span class="feesreg registrationFeeVal greenText"></span>
+                                    </div>
+                                </td>
+                            </tr> 
+                            <tr class="print_regis_fees bankChargesRow" id="prtd_bank_charges">
+                                <th class="colLabel">Bank charges </th>                               
+                                <td class="colInfo"> 
+                                    </br>  
+                                </td>          
+                                <td class="colPrice" align="center">
+                                    <div class="feesreg bankChargesVal"></div>
+                                </td>
+                            </tr> 
+                            <tr class="print_books_fees booksRow" id="prtd_books">
+                                <th class="colLabel">my.Bayswater access and study resources </th>
+                                <td class="colInfo"> </td>          
+                                <td class="colPrice" align="center"><span class="feesbooks cal_books_price"></span></td>
+                            </tr> 
+                            <tr class="print_maramex_fees aramexRow" id="prtd_aramex">
+                                <th class="colLabel">Courier fee </th>
+                                <td class="colInfo"> </td>          
+                                <td class="colPrice" align="center"><span class="feesaramex cal_aramex_price"></span></td>
+                            </tr>
+                            <tr class="print_insurance insuranceRow" id="prtd_insurance">
+                                <th class="colLabel">Travel Insurance  </th>
+                                <td class="colInfo "> </td>          
+                                <td class="colPrice" align="center"><span class="feesReg cal_insurance_price"></span></td>
+                            </tr>            
+                            <tr class="print_accom" id="prtd_acco">
+                                <th class="colLabel">Accommodation </th>
+                                <td class="colInfo">
+                                    <span class="valueAccom">
+                                        <span class="cal_acco_name"></span> : <span class="cal_acco_weeks"> </span>
+                                    </span>
+                                    <br>
+                                    <div class="HolderDscAccommo HolderDscAccommoText vh greenText"></div> 
+                                    <div class="HolderDscAccommoFixed HolderDscAccommoFixedText vh greenText"></div> 
+                                </td>
+                                <td class="colPrice" style="vertical-align:top;position:relative" align="center">
+                                    <span class="feesAccom cal_acco_weeks_price"></span><br>
+                                    <div class="greenText" style="position:absolute;bottom:0;text-align:center;width:100%;">
+                                        <div class="HolderDscAccommo HolderDscAccommoAmount vh greenText"></div> 
+                                        <div class="HolderDscAccommoFixed HolderDscAccommoFixedAmount vh greenText"> </div> 
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="custodianshipFeeRowPdf" style="display: none;">
+                                <th class="colLabel">Custodianship Fee </th>
+                                <td class="colInfo "> </td>          
+                                <td class="colPrice" align="center"><span class="cfeessummer cal_custodianship_fee_price"></span></td>
+                            </tr> 
+                            <tr id="guardianshipFeeRowPdf" style="display: none;">
+                                <th class="colLabel">Guardianship Fee </th>
+                                <td class="colInfo "> </td>          
+                                <td class="colPrice" align="center"><span class="cfeessummer cal_acco_guardianship_fee_price"></span></td>
+                            </tr> 
+                            <tr id="christmasRowPdf" style="display: none;">
+                                <th class="colLabel">Christmas </th>
+                                <td class="colInfo "> </td>          
+                                <td class="colPrice" align="center"><span class="cfeessummer cal_acco_christmas_price"></span></td>
+                            </tr> 
+                            <tr class="cprint_summer_supp" id="prtd_acco_sup">
+                                <th class="colLabel">Accommodation summer suppl.</th>
+                                <td class="colInfo ccal_summer_note"> </td>          
+                                <td class="colPrice" align="center"><span class="cfeessummer ccal_summer_supp_price"></span></td>
+                            </tr> 
+                            <tr class="print_accom_fee accommodationFeeRow" id="prtd_acco_fees">
+                                <th class="colLabel" nowrap>Accommodation placement (non-refundable)</th>
+                                <td class="colInfo"> 
+                                    </br>
+                                    <div class="HolderDscAccommoFee vh greenText">Accommodation Placement fee waived</div> 
+                                </td>          
+                                <td class="colPrice" align="center">
+                                    <span class="feesReg  cal_acco_fee_price"></span>
+                                    <div class="HolderDscAccommoFee vh greenText">
+                                        - <span class="feesReg  cal_acco_fee_price greenText"></span>
+                                    </div> 
+                                </td>
+                            </tr> 
+                            <tr class="rowTransfers print_transfers airportRow" id="prtd_airport">
+                                <th class="colLabel">Airport Transfers </th>
+                                <td class="colInfo">
+                                    <div class="HolderDscArrival vh greenText">Free Arrival Transfer</div> 
+                                    <span class="valueTransferArr cal_airp_arr"></span>
+                                    <br>                
+                                    <span class="valueTransferDep cal_airp_dep"></span>
+                                </td>
+                                <td class="colPrice" align="center">
+                                    <div class="HolderDscArrival vh greenText">
+                                        - <span class="cal_airp_arr_price greenText"></span>
+                                    </div>
+                                    <span class="cal_airp_arr_price"></span></br>
+                                    <span class="cal_airp_dep_price"></span>
+                                </td>
+                            </tr>
+                            <tr class="total">
+                                <th class="colLabel">Total </th>
+                                <td></td>
+                                <td align="center" nowrap>
+                                    <span class="feesTotal flt_right">
+                                        <span class="fnltotal">00.00</span></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>    
+
+                    <div id="wbstfooter" style="text-align: left;">
+                        <?php echo $settings->pdf_footer; ?>
+                    </div>
+
+
+                </div><!-- /.box-body -->
+            </div><!-- /.box -->
+        </div>
+
+
+    </div>
+</section><!-- /.content -->
+
+
+<form method="POST" enctype="multipart/form-data" action="<?php echo site_url('fees/get_pdf'); ?>" id="myFormgetmypdf" target="_blank">
+    <input type="hidden" name="pdf_get_val" id="pdf_get_val" value="" />
+</form>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="<?php echo $this->config->item('base_url2');?>js/calculate_11feb2024.js"></script>

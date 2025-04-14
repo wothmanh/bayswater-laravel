@@ -1,0 +1,122 @@
+/* #wbstlogoimg {
+	width: 100px;
+	height: 80px;
+}
+div .p_result_tbl tbody tr th {
+	font-size: 10px;
+}
+div .p_result_tbl {
+	font-size: 10px
+}
+#wbstlogo {
+  display: block;
+}
+#wbstfooter {
+    display: block;
+}
+
+
+
+table.table-user-information tbody tr td, div.box #prntcallby {
+	font-size: 10px;
+}
+div.clnt_img  {
+	width: 25%;
+	float: left;
+}
+
+.clnt_tbl_info {
+	width: 75%;
+	float: right;
+} */
+
+*{
+	font-family: 'Source Sans Pro', sans-serif;
+}
+.sublfls, .accm_sublfls, .accm_sublflsse, .print_country_name, .print_city_name, .print_center_name, .print_summer_supp, .print_regis_fees, .print_books_fees, .print_maramex_fees, .print_course_name, .print_course_date, .print_course_weeks, .print_course_weeks, .print_insurance, .print_accom, .print_accom_fee, .print_transfers, .printdiv {
+    display: none;
+}
+.table>thead>tr>th, .table>tbody>tr>th, .table>tfoot>tr>th, .table>thead>tr>td, .table>tbody>tr>td, .table>tfoot>tr>td {
+    padding: 5px;
+    line-height: 1.42857143;
+    vertical-align: top;
+    border-top: 1px solid #ddd;
+}
+th {
+    text-align: left;
+}
+.flt_right {
+    float: right;
+}
+#printable {
+	width: 100%;
+}
+#wbstlogoimg {
+	height: 80px;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+#titleforprint {
+  font-weight: bold;
+  font-size: 20px;
+  color: #000;
+  text-align: center;
+  padding-top: 26px;
+}
+#wbstlogo {
+  display: block;
+  height: 90px;
+}
+
+#wbstfooter {
+    margin-top: 20px;
+    line-height: 4px;
+    font-size: 11px;
+    color: #000;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+.p_result_tbl {
+  font-size: 14px;
+  color: #000;
+  border-color: #3C8DBC;
+}
+.p_result_tbl tbody tr th {
+  vertical-align: inherit;
+  color: #0057a7; 
+  font-size: 14px;
+}
+.p_result_tbl, .p_result_tbl td{
+   border-color: #3C8DBC;
+}
+.p_result_tbl > thead > tr > th,
+.p_result_tbl > tbody > tr > th,
+.p_result_tbl > tfoot > tr > th,
+.p_result_tbl > thead > tr > td,
+.p_result_tbl > tbody > tr > td,
+.p_result_tbl > tfoot > tr > td {
+   border: 1px solid #3C8DBC;
+}
+
+
+
+
+/*print client info*/
+table.table-user-information tbody tr td, div.box #prntcallby {
+	font-size: 10px;
+}
+div.clnt_img  {
+	width: 25%;
+	float: left;
+}
+
+.clnt_tbl_info {
+	width: 75%;
+	float: right;
+}
+.greenText {
+    color : #00d900 !important;
+  }

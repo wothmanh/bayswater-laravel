@@ -1,0 +1,17 @@
+@media screen and (max-width: 1100px) {
+
+	#cntr_cnt {
+		width: 90%;
+	}
+
+
+}
+
+@media screen and (max-width: 420px) {
+
+	#cntr_cnt {
+		width: 85%;
+	}
+
+
+}

@@ -1,0 +1,277 @@
+* {
+  margin: 0;
+}
+html, body {
+  height: 100%;
+}
+body {
+-webkit-background-size: cover;
+-moz-background-size: cover; 
+-o-background-size: cover; 
+background-size: cover;  
+}
+.page_wrap {
+  min-height: 100%;
+  margin-bottom: -50px; 
+}
+.page_wrap:after {
+  content: "";
+  display: block;
+}
+.site_footer, .page_wrap:after {
+  height: 25px; 
+}
+.site_footer {
+  text-align:center;
+  font-size: 16px;
+  padding: 12.5px;
+}
+.site_footer a {
+  color: #fff;
+  text-decoration: none;
+}
+.site_footer a:hover {
+  color: #FFAA82;
+}
+.page_wrap > div {
+	text-align: center;
+}
+#sc_t {
+	height: 500px;
+	width: 960px;
+	margin-bottom: -20px; 
+}
+.logo {
+	   padding: 10px;
+    text-align: left;
+    width: 180px;
+    height: 65px;
+}
+.logo a img {
+  width: 100%;
+  height: 100%;
+}
+
+#srvr_nm {
+    position: relative;
+    width: 173px;
+    height: 377px;
+    top: -385px;
+    margin-top: 9px;
+    right: -725px;
+    background-size: 690px;
+    overflow-x: hidden;
+}
+#srvr_nmz {
+    position: relative;
+    width: 173px;
+    height: 377px;
+    top: -434px;
+    margin-top: 9px;
+    right: -725px;
+    background-size: 690px;
+    overflow-x: hidden;
+    font-size: 16px;
+}
+#osrvr_nm {
+	background: url(../img/srv_c.png);
+    position: absolute;
+    width: 129px;
+    height: 401px;
+    top: -15px;
+    padding-top: 9px;
+    right: -132px;
+    background-size: 690px;
+    overflow-x: hidden;
+}
+.srv_msdf {
+    padding: 10px;
+    margin: 5px;
+    background: #F99B1C;
+    margin-right: 11px;
+    font-size: 18px;
+    font-weight: bold;
+}
+.srv_msdf:hover {
+	cursor: pointer;
+	background: #F26522;
+}
+/*#ch_l_ct {
+	z-index: 10;
+    border: 2px solid #3c95d9;
+    background-color: #fff;
+    width: 156px;
+    height: 550px;
+    position: fixed;
+    top: 10%;
+}*/
+#likebox_1 {
+    z-index: 10;
+    border: 2px solid #3c95d9;
+    background-color: #fff;
+    width: 220px;
+    height: 550px;
+    position: fixed;
+    top: 10%;
+    right: -166px;
+}
+#likebox_1_1 {
+    width: 210px;
+    height: 540px;
+    padding: 5px;
+    overflow-x: hidden;
+}
+#m_im_c {
+    position: absolute;
+    top: -2px;
+    left: -52px;
+}
+
+
+
+
+#likebox_1_1::-webkit-scrollbar-track
+{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: #fff;
+}
+
+#likebox_1_1::-webkit-scrollbar
+{
+  width: 8px;
+  background-color: #000;
+}
+
+#likebox_1_1::-webkit-scrollbar-thumb
+{
+  background-color: #F99B1C;
+}
+
+
+#srvr_nmz::-webkit-scrollbar-track
+{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: #fff;
+  border-radius: 10px;
+}
+
+#srvr_nmz::-webkit-scrollbar
+{
+  width: 5px;
+  background-color: #000;
+}
+
+#srvr_nmz::-webkit-scrollbar-thumb
+{
+  background-color: #F99B1C;
+}
+
+
+
+
+
+
+
+
+
+#menu {
+}
+	
+#menu li a {
+  voice-family: "\"}\""; 
+  voice-family: inherit;
+  height: 16px;
+	text-decoration: none;
+  margin: 0px 0px 6px 0px;
+}	
+	
+#menu li a:link, #menu li a:visited {
+	color: #5E7830;
+	display: block;
+	background: url(../img/menu1.png) 0 -72px;
+	padding: 20px 0 0 10px;
+}
+	
+#menu li a:hover {
+	color: #fff;
+	background: url(../img/menu1.png) 0 -36px;
+	padding: 20px 0 0 10px;
+}
+	
+#menu li a:active {
+	color: #26370A;
+	background: url(../img/menu1.png) 0 -72px;
+	padding: 20px 0 0 10px;
+}
+#menu ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	text-align: right;
+  margin-right: 5px;
+}
+#menu ul li a img{
+	  width: 20px;
+    height: 20px;
+    margin: -12px 5px;
+    float: right;
+}
+.lnks_dejf {
+    margin-top: -11px;
+}
+#lodaing_srv {
+    margin-top: 140px;
+    margin-left: -22px;
+    display: none;
+    position: absolute;
+    z-index: 2;
+    background: #f26522;
+    border-radius: 10px;
+    padding: 3px 7px 7px 1px;
+}
+#cntr_cnt {
+  width: 1000px;
+  background: #ddd;
+  margin: auto;
+  margin-bottom: 30px;
+}
+.clear {
+  clear: both;
+}
+#wst_nm {
+    position: absolute;
+    margin-top: -62px;
+    margin-left: 333px;
+    font-size: 20px;
+    color: #ccc;
+    font-weight: bold;
+}
+.live_tv_c {
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+
+.ch_lst{
+  width: 160px;
+  height: 140px;
+}
+.ch_lst img {
+  width: 100%;
+  height: 110px;
+}
+.ch_lst p {
+  text-align: center;
+  text-decoration: none;
+  color: #222;
+  margin-top: 5px;
+}
+.hfer li a {
+  text-decoration: none;
+}
+
+
+
+

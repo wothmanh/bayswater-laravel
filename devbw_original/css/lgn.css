@@ -1,0 +1,87 @@
+body.login-screen {
+    height: 100%;
+    background: #E9E9EA;
+}
+.pace-inactive {
+    display: none;
+}
+.container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.row {
+    margin-left: -15px;
+    margin-right: -15px;
+}
+    .login-box {
+    width: 320px;
+    margin: 5% auto;
+    padding: 20px 30px;
+    background: #fff;
+    position: relative;
+    color: #999;
+    z-index: 1;
+}
+.login-content {
+    text-align: center;
+}
+.login-box .login-user-icon {
+    border: 5px solid #565656;
+    border-radius: 75px;
+    color: #565656;
+    font-size: 70px;
+    height: 150px;
+    line-height: 160px;
+    margin: auto;
+    text-align: center;
+    width: 150px;
+}
+.login-content h3 {
+    color: #696969;
+}
+.social-btn-login {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.login-box .login-form, .login-box .forgot-pass-box {
+    padding: 15px 0;
+}
+input.ls-group-input, .ls-group-input {
+    margin-bottom: 15px;
+}
+
+.input-group {
+    position: relative;
+    display: table;
+    border-collapse: separate;
+}
+.login-box .login-form .login-btn-box, .login-box .forgot-pass-box .login-btn-box {
+    text-align: center;
+    width: 100%;
+    margin: auto;
+}
+.login-box .login-form input, .login-box .forgot-pass-box input {
+    border: 1px solid #25286D;
+    color: #25286F;
+}
+.login-box .login-form input.lgn {
+    background: #002BA6;
+    border: 1px solid #0014a7;
+    color: #E9E9EA;
+}
+.login-box .login-form .input-group-addon, .login-box .forgot-pass-box .input-group-addon {
+    background: #03CA99;
+    color: #E9E9EA;
+    border-color: #e82335;
+}
+#erdsplr {
+    font-size: 18px;
+    color: red;
+    text-align: center;
+}
+#cnwst_bc_1c {
+    margin-top: -40px;
+    margin-bottom: 10px;
+}
