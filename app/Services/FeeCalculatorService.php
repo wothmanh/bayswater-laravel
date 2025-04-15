@@ -60,6 +60,12 @@ class FeeCalculatorService
      */
     public function calculateQuote(array $quoteParams): array
     {
+        // Check if we're dealing with the new multi-selection format
+        if (isset($quoteParams['courses']) || isset($quoteParams['accommodations'])) {
+            return $this->calculateSplitQuote($quoteParams);
+        }
+
+        // Continue with the original single-selection format
         try {
             $this->reset();
             if (!$this->loadQuoteDetails($quoteParams)) {
@@ -931,5 +937,417 @@ class FeeCalculatorService
         // Calculate full weeks, rounding down.
         // Use 7 days per week for calculation.
         return floor($overlapDays / 7);
+    }
+
+    /**
+     * Calculate a quote with multiple course and accommodation selections.
+     *
+     * @param array $quoteParams Parameters including 'courses' and 'accommodations' arrays
+     * @return array The detailed cost breakdown
+     */
+    public function calculateSplitQuote(array $quoteParams): array
+    {
+        try {
+            $this->reset();
+
+            // Initialize the cost breakdown structure for split selections
+            $this->costBreakdown = [
+                'course_fees' => [],
+                'accommodation_fees' => [],
+                'placement_fees' => [],
+                'other_fees' => [],
+                'discounts' => [],
+                'subtotals' => [
+                    'tuition' => 0,
+                    'accommodation' => 0,
+                    'fees' => 0,
+                    'addons' => 0,
+                ],
+                'total' => 0,
+                'currency_code' => '',
+                'currency_symbol' => '',
+                'errors' => [],
+                'notes' => [],
+            ];
+
+            // Load essential school and currency information
+            $this->school = School::with('currency', 'city')->find($quoteParams['school_id'] ?? null);
+            if (!$this->school) {
+                $this->addError('Invalid School ID provided.');
+                return $this->costBreakdown;
+            }
+
+            $this->currency = $this->school->currency;
+            if (!$this->currency) {
+                $this->addError('School is missing a currency configuration.');
+                return $this->costBreakdown;
+            }
+
+            $this->costBreakdown['currency_code'] = $this->currency->code;
+            $this->costBreakdown['currency_symbol'] = $this->currency->symbol ?? $this->currency->code;
+            $this->costBreakdown['school_name'] = $this->school->name;
+            $this->costBreakdown['city_name'] = $this->school->city->name ?? 'Unknown City';
+
+            // Store region ID for discount calculations
+            $this->regionId = $quoteParams['region_id'] ?? null;
+
+            // Load student details if available
+            if (!empty($quoteParams['client_birthday'])) {
+                try {
+                    $this->studentAge = Carbon::parse($quoteParams['client_birthday'])->age;
+                } catch (\Exception $e) {
+                    $this->addError('Invalid Client Birthday provided.');
+                }
+            }
+            $this->nationalityCountryId = $quoteParams['client_nationality_country_id'] ?? null;
+
+            // Load selected addons
+            $this->selectedAddons = $quoteParams['selected_addons'] ?? [];
+
+            // Load airport transfer IDs
+            $this->arrivalAirportId = $quoteParams['arrival_transfer_airport_id'] ?? null;
+            $this->departureAirportId = $quoteParams['departure_transfer_airport_id'] ?? null;
+
+            // Load Christmas accommodation options
+            $this->christmasAccommodation = !empty($quoteParams['christmas_accommodation']);
+            $this->christmasExtraWeeks = isset($quoteParams['christmas_extra_weeks']) ? (int) $quoteParams['christmas_extra_weeks'] : null;
+
+            // Load Christmas dates from request OR school settings
+            try {
+                if (!empty($quoteParams['christmas_start_date'])) {
+                    $this->christmasStartDate = Carbon::parse($quoteParams['christmas_start_date']);
+                } elseif ($this->school->christmas_start_date) {
+                    $this->christmasStartDate = Carbon::parse($this->school->christmas_start_date);
+                }
+
+                if (!empty($quoteParams['christmas_end_date'])) {
+                    $this->christmasEndDate = Carbon::parse($quoteParams['christmas_end_date']);
+                } elseif ($this->school->christmas_end_date) {
+                    $this->christmasEndDate = Carbon::parse($this->school->christmas_end_date);
+                }
+            } catch (\Exception $e) {
+                $this->addError('Invalid Christmas period dates provided.');
+            }
+
+            // Calculate school fees (registration, bank charges, etc.)
+            $this->calculateSchoolFees();
+
+            // Process each course selection
+            if (!empty($quoteParams['courses'])) {
+                foreach ($quoteParams['courses'] as $index => $courseSelection) {
+                    $this->processCourseSelection($courseSelection, $index);
+                }
+            }
+
+            // Process each accommodation selection
+            if (!empty($quoteParams['accommodations'])) {
+                foreach ($quoteParams['accommodations'] as $index => $accommodationSelection) {
+                    $this->processAccommodationSelection($accommodationSelection, $index);
+                }
+            }
+
+            // Calculate addon costs
+            $this->calculateAddonCosts();
+
+            // Calculate airport transfer costs
+            $this->calculateAirportTransferCosts();
+
+            // Apply discounts
+            $this->applyDiscounts();
+
+            // Calculate final total
+            $this->calculateTotal();
+
+            return $this->costBreakdown;
+
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Error in FeeCalculatorService (Split Quote): ' . $e->getMessage(), [
+                'exception' => $e,
+                'params' => $quoteParams
+            ]);
+
+            // Add error to the cost breakdown
+            $this->addError('An unexpected error occurred during calculation: ' . $e->getMessage());
+            return $this->costBreakdown;
+        }
+    }
+
+    /**
+     * Process a single course selection for a split quote.
+     *
+     * @param array $courseSelection Course selection parameters
+     * @param int $index Index of the course selection
+     */
+    private function processCourseSelection(array $courseSelection, int $index): void
+    {
+        // Load course details
+        $course = Course::find($courseSelection['course_id'] ?? null);
+        if (!$course) {
+            $this->addError("Invalid Course ID provided for course selection #{$index}.");
+            return;
+        }
+
+        if ($course->school_id !== $this->school->id) {
+            $this->addError("Course in selection #{$index} does not belong to the selected school.");
+            return;
+        }
+
+        // Parse start date
+        try {
+            $startDate = Carbon::parse($courseSelection['start_date'] ?? null);
+        } catch (\Exception $e) {
+            $this->addError("Invalid Start Date provided for course selection #{$index}.");
+            return;
+        }
+
+        // Get duration
+        $durationWeeks = isset($courseSelection['duration_weeks']) ? (int) $courseSelection['duration_weeks'] : null;
+        if ($durationWeeks === null || $durationWeeks < 1) {
+            $this->addError("Invalid Duration provided for course selection #{$index}.");
+            return;
+        }
+
+        // Calculate course end date
+        $endDate = $startDate->copy()->addWeeks($durationWeeks);
+
+        // Calculate course fee
+        $courseFee = $this->calculateCourseFeeForSelection($course, $startDate, $durationWeeks, $index);
+
+        // Add to cost breakdown
+        if ($courseFee > 0) {
+            $this->costBreakdown['course_fees'][] = [
+                'course_id' => $course->id,
+                'course_name' => $course->name,
+                'start_date' => $startDate->format('Y-m-d'),
+                'duration_weeks' => $durationWeeks,
+                'fee' => $courseFee,
+                'sequence_order' => $index,
+            ];
+
+            $this->costBreakdown['subtotals']['tuition'] += $courseFee;
+        }
+    }
+
+    /**
+     * Calculate the fee for a single course selection.
+     *
+     * @param Course $course The course model
+     * @param Carbon $startDate The start date
+     * @param int $durationWeeks The duration in weeks
+     * @param int $index The index of the course selection
+     * @return float The calculated course fee
+     */
+    private function calculateCourseFeeForSelection(Course $course, Carbon $startDate, int $durationWeeks, int $index): float
+    {
+        $tuitionPrice = 0;
+
+        if ($course->pricing_type === 'per_week') {
+            // Find the active price range that includes the requested number of weeks
+            $price = CoursePrice::where('course_id', $course->id)
+                ->where('min_weeks', '<=', $durationWeeks)
+                ->where('max_weeks', '>=', $durationWeeks)
+                ->where('active', true)
+                ->orderBy('min_weeks', 'desc') // Prioritize the narrowest matching range
+                ->first();
+
+            if (!$price) {
+                $this->addError("Could not find weekly price for '{$course->name}' for {$durationWeeks} weeks in course selection #{$index}.");
+                return 0;
+            }
+
+            $tuitionPrice = $price->price_per_week * $durationWeeks;
+
+        } elseif ($course->pricing_type === 'fixed_schedule') {
+            // Find the active schedule matching the exact start date and duration
+            $schedule = CourseSchedule::where('course_id', $course->id)
+                ->where('start_date', $startDate->toDateString())
+                ->where('duration_weeks', $durationWeeks)
+                ->where('active', true)
+                ->first();
+
+            if (!$schedule) {
+                $this->addError("Could not find schedule for '{$course->name}' starting {$startDate->toDateString()} for {$durationWeeks} weeks in course selection #{$index}.");
+                return 0;
+            }
+
+            $tuitionPrice = $schedule->fixed_price;
+        }
+
+        // Add Course Summer Supplement if applicable
+        if ($this->school->summer_fee_per_week > 0 && $this->school->summer_start_date && $this->school->summer_end_date) {
+            $courseEndDate = $startDate->copy()->addWeeks($durationWeeks);
+            $overlapWeeks = $this->calculateOverlapWeeks(
+                $startDate,
+                $courseEndDate,
+                Carbon::parse($this->school->summer_start_date),
+                Carbon::parse($this->school->summer_end_date)
+            );
+
+            // Check if the supplement should be waived based on course duration
+            $waiveSupplement = $this->school->summer_fee_weeks_off !== null && $durationWeeks >= $this->school->summer_fee_weeks_off;
+
+            if ($overlapWeeks > 0 && !$waiveSupplement) {
+                $summerFee = $overlapWeeks * $this->school->summer_fee_per_week;
+                $this->addItem("Course Summer Supplement (Course #" . ($index + 1) . ")", $summerFee, 'fees');
+                // We don't add this to the course fee, it's a separate fee item
+            }
+        }
+
+        return $tuitionPrice;
+    }
+
+    /**
+     * Process a single accommodation selection for a split quote.
+     *
+     * @param array $accommodationSelection Accommodation selection parameters
+     * @param int $index Index of the accommodation selection
+     */
+    private function processAccommodationSelection(array $accommodationSelection, int $index): void
+    {
+        // Load accommodation details
+        $accommodation = Accommodation::find($accommodationSelection['accommodation_id'] ?? null);
+        if (!$accommodation) {
+            $this->addError("Invalid Accommodation ID provided for accommodation selection #{$index}.");
+            return;
+        }
+
+        if ($accommodation->school_id !== $this->school->id) {
+            $this->addError("Accommodation in selection #{$index} does not belong to the selected school.");
+            return;
+        }
+
+        // Get duration
+        $durationWeeks = isset($accommodationSelection['duration_weeks']) ? (int) $accommodationSelection['duration_weeks'] : null;
+        if ($durationWeeks === null || $durationWeeks < 1) {
+            $this->addError("Invalid Duration provided for accommodation selection #{$index}.");
+            return;
+        }
+
+        // Calculate accommodation fee
+        $accommodationFee = $this->calculateAccommodationFeeForSelection($accommodation, $durationWeeks, $index);
+
+        // Add to cost breakdown
+        if ($accommodationFee > 0) {
+            $this->costBreakdown['accommodation_fees'][] = [
+                'accommodation_id' => $accommodation->id,
+                'accommodation_name' => $accommodation->name,
+                'duration_weeks' => $durationWeeks,
+                'fee' => $accommodationFee,
+                'sequence_order' => $index,
+            ];
+
+            $this->costBreakdown['subtotals']['accommodation'] += $accommodationFee;
+        }
+
+        // Add Placement Fee (one per unique accommodation type)
+        $hasAccommFeeWaiver = collect($this->costBreakdown['discounts'])->contains('applied_to', 'accommodation_fee_waiver');
+
+        // Check if this accommodation type already has a placement fee
+        $placementFeeAdded = false;
+        foreach ($this->costBreakdown['placement_fees'] ?? [] as $placementFee) {
+            if ($placementFee['accommodation_id'] === $accommodation->id) {
+                $placementFeeAdded = true;
+                break;
+            }
+        }
+
+        if (!$placementFeeAdded && $this->school->accommodation_fee > 0 && !$hasAccommFeeWaiver) {
+            $this->costBreakdown['placement_fees'][] = [
+                'accommodation_id' => $accommodation->id,
+                'accommodation_name' => $accommodation->name,
+                'fee' => $this->school->accommodation_fee,
+            ];
+
+            $this->costBreakdown['subtotals']['fees'] += $this->school->accommodation_fee;
+            $this->addItem("Accommodation Placement Fee ({$accommodation->name})", $this->school->accommodation_fee, 'fees');
+        }
+    }
+
+    /**
+     * Calculate the fee for a single accommodation selection.
+     *
+     * @param Accommodation $accommodation The accommodation model
+     * @param int $durationWeeks The duration in weeks
+     * @param int $index The index of the accommodation selection
+     * @return float The calculated accommodation fee
+     */
+    private function calculateAccommodationFeeForSelection(Accommodation $accommodation, int $durationWeeks, int $index): float
+    {
+        // Find the active price range that includes the requested number of weeks
+        $price = AccommodationPrice::where('accommodation_id', $accommodation->id)
+            ->where('min_weeks', '<=', $durationWeeks)
+            ->where('max_weeks', '>=', $durationWeeks)
+            ->where('active', true)
+            ->orderBy('min_weeks', 'desc') // Prioritize the narrowest matching range
+            ->first();
+
+        if (!$price) {
+            $this->addError("Could not find weekly price for '{$accommodation->name}' for {$durationWeeks} weeks in accommodation selection #{$index}.");
+            return 0;
+        }
+
+        $accommodationFee = $price->price_per_week * $durationWeeks;
+
+        // We need to determine the start date for this accommodation
+        // For now, we'll assume it starts with the first course
+        // In a more advanced implementation, we might want to specify start dates for accommodations
+        $startDate = null;
+        if (!empty($this->costBreakdown['course_fees'])) {
+            $firstCourse = collect($this->costBreakdown['course_fees'])->sortBy('sequence_order')->first();
+            if ($firstCourse) {
+                $startDate = Carbon::parse($firstCourse['start_date']);
+            }
+        }
+
+        if (!$startDate) {
+            $this->addError("Could not determine start date for accommodation selection #{$index}.");
+            return $accommodationFee; // Return the base fee even if we can't calculate supplements
+        }
+
+        $accommodationEndDate = $startDate->copy()->addWeeks($durationWeeks);
+
+        // Add Accommodation Summer Supplement if applicable
+        if ($accommodation->summer_fee_per_week > 0 && $accommodation->summer_start_date && $accommodation->summer_end_date) {
+            $overlapWeeks = $this->calculateOverlapWeeks(
+                $startDate,
+                $accommodationEndDate,
+                Carbon::parse($accommodation->summer_start_date),
+                Carbon::parse($accommodation->summer_end_date)
+            );
+
+            if ($overlapWeeks > 0) {
+                $summerFee = $overlapWeeks * $accommodation->summer_fee_per_week;
+                $this->addItem("Accommodation Summer Supplement (#" . ($index + 1) . ")", $summerFee, 'fees');
+                // We don't add this to the accommodation fee, it's a separate fee item
+            }
+        }
+
+        // Add Accommodation Christmas Supplement if applicable
+        $christmasSupplementApplies = $this->christmasAccommodation || $accommodation->requires_christmas_supplement;
+        $hasChristmasDates = $this->christmasStartDate && $this->christmasEndDate;
+
+        if ($christmasSupplementApplies && $hasChristmasDates) {
+            $overlapWeeks = $this->calculateOverlapWeeks(
+                $startDate,
+                $accommodationEndDate,
+                $this->christmasStartDate,
+                $this->christmasEndDate
+            );
+
+            if ($overlapWeeks > 0 && $this->school->christmas_fee_per_week > 0) {
+                $christmasFee = $overlapWeeks * $this->school->christmas_fee_per_week;
+                $this->addItem("Accommodation Christmas Supplement (#" . ($index + 1) . ")", $christmasFee, 'fees');
+            }
+
+            // Add extra weeks cost if applicable
+            if ($this->christmasAccommodation && $this->christmasExtraWeeks > 0) {
+                $extraWeeksText = $this->christmasExtraWeeks . ' extra ' . ($this->christmasExtraWeeks === 1 ? 'week' : 'weeks');
+                $extraWeeksCost = $this->christmasExtraWeeks * $price->price_per_week;
+                $this->addItem("Extra Christmas Accommodation (#" . ($index + 1) . ", {$extraWeeksText})", $extraWeeksCost, 'fees');
+            }
+        }
+
+        return $accommodationFee;
     }
 }

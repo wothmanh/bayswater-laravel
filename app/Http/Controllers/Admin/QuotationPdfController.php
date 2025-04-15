@@ -20,32 +20,38 @@ class QuotationPdfController extends Controller
      */
     public function generatePdf(Request $request, FeeCalculatorService $calculator)
     {
-        // Validate the request
-        $validatedData = $request->validate([
-            'school_id' => 'required|exists:schools,id',
-            'region_id' => 'required|exists:regions,id',
-            'course_id' => 'required|exists:courses,id',
-            'course_start_date' => 'required|date',
-            'course_duration_weeks' => 'required|integer|min:1',
-            'accommodation_id' => 'nullable|exists:accommodations,id',
-            'accommodation_duration_weeks' => [
-                'nullable',
-                'required_with:accommodation_id',
-                'integer',
-                'min:1',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($value > $request->input('course_duration_weeks')) {
-                        $fail('Accommodation duration cannot exceed course duration.');
+        // Check if we're dealing with the new split selection format
+        if ($request->has('courses') || $request->has('accommodations')) {
+            // Validate for split selections
+            $validatedData = $this->validateSplitSelections($request);
+        } else {
+            // Validate for single selection (original format)
+            $validatedData = $request->validate([
+                'school_id' => 'required|exists:schools,id',
+                'region_id' => 'required|exists:regions,id',
+                'course_id' => 'required|exists:courses,id',
+                'course_start_date' => 'required|date',
+                'course_duration_weeks' => 'required|integer|min:1',
+                'accommodation_id' => 'nullable|exists:accommodations,id',
+                'accommodation_duration_weeks' => [
+                    'nullable',
+                    'required_with:accommodation_id',
+                    'integer',
+                    'min:1',
+                    function ($attribute, $value, $fail) use ($request) {
+                        if ($value > $request->input('course_duration_weeks')) {
+                            $fail('Accommodation duration cannot exceed course duration.');
+                        }
                     }
-                }
-            ],
-            'client_birthday' => 'nullable|date',
-            'client_nationality_country_id' => 'nullable|exists:countries,id',
-            'selected_addons' => 'nullable|array',
-            'selected_addons.*' => 'sometimes|boolean',
-            'arrival_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
-            'departure_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
-        ]);
+                ],
+                'client_birthday' => 'nullable|date',
+                'client_nationality_country_id' => 'nullable|exists:countries,id',
+                'selected_addons' => 'nullable|array',
+                'selected_addons.*' => 'sometimes|boolean',
+                'arrival_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
+                'departure_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
+            ]);
+        }
 
         // Prepare parameters for the service
         $quoteParams = $validatedData;
@@ -124,32 +130,38 @@ class QuotationPdfController extends Controller
      */
     public function printQuotation(Request $request, FeeCalculatorService $calculator)
     {
-        // Validate the request
-        $validatedData = $request->validate([
-            'school_id' => 'required|exists:schools,id',
-            'region_id' => 'required|exists:regions,id',
-            'course_id' => 'required|exists:courses,id',
-            'course_start_date' => 'required|date',
-            'course_duration_weeks' => 'required|integer|min:1',
-            'accommodation_id' => 'nullable|exists:accommodations,id',
-            'accommodation_duration_weeks' => [
-                'nullable',
-                'required_with:accommodation_id',
-                'integer',
-                'min:1',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($value > $request->input('course_duration_weeks')) {
-                        $fail('Accommodation duration cannot exceed course duration.');
+        // Check if we're dealing with the new split selection format
+        if ($request->has('courses') || $request->has('accommodations')) {
+            // Validate for split selections
+            $validatedData = $this->validateSplitSelections($request);
+        } else {
+            // Validate for single selection (original format)
+            $validatedData = $request->validate([
+                'school_id' => 'required|exists:schools,id',
+                'region_id' => 'required|exists:regions,id',
+                'course_id' => 'required|exists:courses,id',
+                'course_start_date' => 'required|date',
+                'course_duration_weeks' => 'required|integer|min:1',
+                'accommodation_id' => 'nullable|exists:accommodations,id',
+                'accommodation_duration_weeks' => [
+                    'nullable',
+                    'required_with:accommodation_id',
+                    'integer',
+                    'min:1',
+                    function ($attribute, $value, $fail) use ($request) {
+                        if ($value > $request->input('course_duration_weeks')) {
+                            $fail('Accommodation duration cannot exceed course duration.');
+                        }
                     }
-                }
-            ],
-            'client_birthday' => 'nullable|date',
-            'client_nationality_country_id' => 'nullable|exists:countries,id',
-            'selected_addons' => 'nullable|array',
-            'selected_addons.*' => 'sometimes|boolean',
-            'arrival_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
-            'departure_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
-        ]);
+                ],
+                'client_birthday' => 'nullable|date',
+                'client_nationality_country_id' => 'nullable|exists:countries,id',
+                'selected_addons' => 'nullable|array',
+                'selected_addons.*' => 'sometimes|boolean',
+                'arrival_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
+                'departure_transfer_airport_id' => 'nullable|exists:airports,id', // Add validation
+            ]);
+        }
 
         // Prepare parameters for the service
         $quoteParams = $validatedData;
@@ -211,5 +223,117 @@ class QuotationPdfController extends Controller
             'costBreakdown' => $costBreakdown,
             'settings' => $settings
         ]);
+    }
+
+    /**
+     * Validate split course and accommodation selections.
+     *
+     * @param Request $request
+     * @return array
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    private function validateSplitSelections(Request $request): array
+    {
+        // Validate common fields
+        $validatedData = $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'region_id' => 'required|exists:regions,id',
+            'client_birthday' => 'nullable|date',
+            'client_nationality_country_id' => 'nullable|exists:countries,id',
+            'selected_addons' => 'nullable|array',
+            'selected_addons.*' => 'sometimes|boolean',
+            'arrival_transfer_airport_id' => 'nullable|exists:airports,id',
+            'departure_transfer_airport_id' => 'nullable|exists:airports,id',
+        ]);
+
+        // Validate course selections
+        if ($request->has('courses')) {
+            $validatedData['courses'] = $request->validate([
+                'courses' => 'required|array|min:1',
+                'courses.*.course_id' => 'required|exists:courses,id',
+                'courses.*.start_date' => 'required|date',
+                'courses.*.duration_weeks' => 'required|integer|min:1',
+            ])['courses'];
+
+            // Validate that courses are sequential
+            $this->validateSequentialCourses($validatedData['courses']);
+        }
+
+        // Validate accommodation selections
+        if ($request->has('accommodations')) {
+            $validatedData['accommodations'] = $request->validate([
+                'accommodations' => 'required|array|min:1',
+                'accommodations.*.accommodation_id' => 'required|exists:accommodations,id',
+                'accommodations.*.duration_weeks' => 'required|integer|min:1',
+            ])['accommodations'];
+
+            // Validate that total accommodation duration doesn't exceed total course duration
+            $this->validateAccommodationDuration($validatedData);
+        }
+
+        return $validatedData;
+    }
+
+    /**
+     * Validate that courses are sequential without gaps.
+     *
+     * @param array $courses
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    private function validateSequentialCourses(array $courses): void
+    {
+        if (count($courses) <= 1) {
+            return; // No need to validate if there's only one course
+        }
+
+        // Sort courses by start date
+        usort($courses, function ($a, $b) {
+            return strtotime($a['start_date']) - strtotime($b['start_date']);
+        });
+
+        // Check that each course starts immediately after the previous one ends
+        for ($i = 0; $i < count($courses) - 1; $i++) {
+            $currentCourse = $courses[$i];
+            $nextCourse = $courses[$i + 1];
+
+            $currentEndDate = \Carbon\Carbon::parse($currentCourse['start_date'])->addWeeks($currentCourse['duration_weeks']);
+            $nextStartDate = \Carbon\Carbon::parse($nextCourse['start_date']);
+
+            if (!$currentEndDate->isSameDay($nextStartDate)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "courses.{$i}.duration_weeks" => ["Course " . ($i + 2) . " must start immediately after Course " . ($i + 1) . " ends."]
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate that total accommodation duration doesn't exceed total course duration.
+     *
+     * @param array $validatedData
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    private function validateAccommodationDuration(array $validatedData): void
+    {
+        if (empty($validatedData['courses']) || empty($validatedData['accommodations'])) {
+            return; // Can't validate if either courses or accommodations are missing
+        }
+
+        // Calculate total course duration
+        $totalCourseDuration = array_reduce($validatedData['courses'], function ($total, $course) {
+            return $total + $course['duration_weeks'];
+        }, 0);
+
+        // Calculate total accommodation duration
+        $totalAccommodationDuration = array_reduce($validatedData['accommodations'], function ($total, $accommodation) {
+            return $total + $accommodation['duration_weeks'];
+        }, 0);
+
+        // Validate that total accommodation duration doesn't exceed total course duration
+        if ($totalAccommodationDuration > $totalCourseDuration) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'accommodations' => ['Total accommodation duration cannot exceed total course duration.']
+            ]);
+        }
     }
 }

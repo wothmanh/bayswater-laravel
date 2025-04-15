@@ -104,4 +104,20 @@ class Quotation extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    /**
+     * Get the course selections for the quotation.
+     */
+    public function courseSelections(): HasMany
+    {
+        return $this->hasMany(CourseSelection::class)->orderBy('sequence_order');
+    }
+
+    /**
+     * Get the accommodation selections for the quotation.
+     */
+    public function accommodationSelections(): HasMany
+    {
+        return $this->hasMany(AccommodationSelection::class)->orderBy('sequence_order');
+    }
 }
