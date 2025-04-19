@@ -100,10 +100,36 @@ class QuotationPdfController extends Controller
 
         // Calculate the quote
         \Illuminate\Support\Facades\Log::info('PDF Generation - Calculating quote with params:', $quoteParams); // Log params for PDF
-        $costBreakdown = $calculator->calculateQuote($quoteParams);
+
+        // Use split quote calculation if additional course or accommodation is provided
+        if (!empty($quoteParams['courses']) || !empty($quoteParams['accommodations'])) {
+            $costBreakdown = $calculator->calculateSplitQuote($quoteParams);
+        } else {
+            $costBreakdown = $calculator->calculateQuote($quoteParams);
+        }
 
         // Add course start date to the cost breakdown for display
-        $costBreakdown['course_start_date'] = $validatedData['course_start_date'];
+        if (isset($validatedData['course_start_date'])) {
+            $costBreakdown['course_start_date'] = $validatedData['course_start_date'];
+        }
+
+        // Add courses and accommodations data to the cost breakdown for display
+        if (!empty($quoteParams['courses'])) {
+            // Calculate end dates for each course if not already set
+            foreach ($quoteParams['courses'] as $index => $course) {
+                if (!isset($course['end_date'])) {
+                    // Calculate course end date (Friday of the last week)
+                    $startDate = \Carbon\Carbon::parse($course['start_date']);
+                    $endDate = $startDate->copy()->addWeeks($course['duration_weeks'] - 1)->addDays(4);
+                    $quoteParams['courses'][$index]['end_date'] = $endDate->format('Y-m-d');
+                }
+            }
+            $costBreakdown['courses'] = $quoteParams['courses'];
+        }
+
+        if (!empty($quoteParams['accommodations'])) {
+            $costBreakdown['accommodations'] = $quoteParams['accommodations'];
+        }
 
         // Get settings for company info and logo
         $settings = Setting::first();
@@ -210,10 +236,36 @@ class QuotationPdfController extends Controller
 
         // Calculate the quote
         \Illuminate\Support\Facades\Log::info('Print Quotation - Calculating quote with params:', $quoteParams); // Log params for Print
-        $costBreakdown = $calculator->calculateQuote($quoteParams);
+
+        // Use split quote calculation if additional course or accommodation is provided
+        if (!empty($quoteParams['courses']) || !empty($quoteParams['accommodations'])) {
+            $costBreakdown = $calculator->calculateSplitQuote($quoteParams);
+        } else {
+            $costBreakdown = $calculator->calculateQuote($quoteParams);
+        }
 
         // Add course start date to the cost breakdown for display
-        $costBreakdown['course_start_date'] = $validatedData['course_start_date'];
+        if (isset($validatedData['course_start_date'])) {
+            $costBreakdown['course_start_date'] = $validatedData['course_start_date'];
+        }
+
+        // Add courses and accommodations data to the cost breakdown for display
+        if (!empty($quoteParams['courses'])) {
+            // Calculate end dates for each course if not already set
+            foreach ($quoteParams['courses'] as $index => $course) {
+                if (!isset($course['end_date'])) {
+                    // Calculate course end date (Friday of the last week)
+                    $startDate = \Carbon\Carbon::parse($course['start_date']);
+                    $endDate = $startDate->copy()->addWeeks($course['duration_weeks'] - 1)->addDays(4);
+                    $quoteParams['courses'][$index]['end_date'] = $endDate->format('Y-m-d');
+                }
+            }
+            $costBreakdown['courses'] = $quoteParams['courses'];
+        }
+
+        if (!empty($quoteParams['accommodations'])) {
+            $costBreakdown['accommodations'] = $quoteParams['accommodations'];
+        }
 
         // Get settings for company info and logo
         $settings = Setting::first();

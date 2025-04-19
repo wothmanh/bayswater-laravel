@@ -119,6 +119,67 @@
                                     </select>
                                     <x-input-error :messages="$errors->get('course_duration_weeks')" class="mt-2" />
                                 </div>
+
+                                {{-- Add Additional Course Button --}}
+                                <div class="md:col-span-2 mt-4">
+                                    <button type="button" id="add-additional-course-btn" class="inline-flex items-center px-3 py-1 bg-bayswater-blue text-white text-sm font-medium rounded hover:bg-bayswater-blue-dark">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Additional Course
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Additional Course Options Section --}}
+                        <div id="additional-course-section" class="mb-6" style="display: none;">
+                            <div class="flex justify-between items-center text-white bg-bayswater-blue p-2 rounded-t-md">
+                                <h4 class="text-md font-semibold">Additional Course</h4>
+                                <button type="button" id="remove-additional-course-btn-top" class="inline-flex items-center px-2 py-1 bg-red-500 text-white text-xs font-medium rounded hover:bg-red-600 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Remove
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-b-md">
+                                {{-- Course --}}
+                                <div>
+                                    <x-input-label for="additional_course_id" :value="__('Course')" class="text-gray-700 font-medium"/>
+                                    <select name="additional_course_id" id="additional_course_id" class="block mt-1 w-full border-gray-300 bg-white text-gray-700 focus:border-bayswater-blue focus:ring-bayswater-blue rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <option value="">-- Select Course --</option>
+                                         @foreach($courses as $course)
+                                            <option value="{{ $course->id }}" data-school="{{ $course->school_id }}" {{ old('additional_course_id') == $course->id ? 'selected' : '' }}>{{ $course->name }}</option>
+                                         @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('additional_course_id')" class="mt-2" />
+                                </div>
+                                {{-- Start Date --}}
+                                <div>
+                                    <x-input-label for="additional_course_start_date" :value="__('Start Date (Mondays Only)')" class="text-gray-700 dark:text-gray-300"/>
+                                    <x-text-input id="additional_course_start_date" class="block mt-1 w-full dark:bg-white dark:text-gray-700" type="date" name="additional_course_start_date" :value="old('additional_course_start_date')" min="{{ date('Y') }}-01-01" />
+                                    <x-input-error :messages="$errors->get('additional_course_start_date')" class="mt-2" />
+                                    <p id="additional_start_date_error" class="text-xs text-red-600 dark:text-red-400 mt-1" style="display: none;">Start date must be a Monday.</p>
+                                </div>
+                                {{-- Number of Weeks --}}
+                                <div>
+                                    <x-input-label for="additional_course_duration_weeks" :value="__('Course Duration (weeks)')" class="text-gray-700 font-medium"/>
+                                    <select id="additional_course_duration_weeks" name="additional_course_duration_weeks" class="block mt-1 w-full border-gray-300 bg-white text-gray-700 focus:border-bayswater-blue focus:ring-bayswater-blue rounded-md shadow-sm">
+                                        <option value="">-- Select Course Duration --</option>
+                                        {{-- Options will be populated by JS --}}
+                                    </select>
+                                    <x-input-error :messages="$errors->get('additional_course_duration_weeks')" class="mt-2" />
+                                </div>
+                                {{-- Remove Button --}}
+                                <div class="flex items-end">
+                                    <button type="button" id="remove-additional-course-btn" class="inline-flex items-center px-4 py-2 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Remove Additional Course
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -144,6 +205,7 @@
                                          <option value="">-- Select Accommodation Duration --</option>
                                          {{-- Options will be populated by JS --}}
                                      </select>
+                                     <p id="accommodation_budget_info" class="mt-1 text-sm text-gray-500">Total accommodation weeks cannot exceed total course duration.</p>
                                      <x-input-error :messages="$errors->get('accommodation_duration_weeks')" class="mt-2" />
                                  </div>
 
@@ -166,6 +228,16 @@
                                      <x-input-error :messages="$errors->get('christmas_accommodation')" class="mt-2" />
                                  </div>
 
+                                 {{-- Add a different Accommodation Button --}}
+                                 <div class="md:col-span-2 mt-4">
+                                     <button type="button" id="add-additional-accommodation-btn" class="inline-flex items-center px-3 py-1 bg-bayswater-blue text-white text-sm font-medium rounded hover:bg-bayswater-blue-dark">
+                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                         </svg>
+                                         Add a different Accommodation
+                                     </button>
+                                 </div>
+
                                  {{-- Courier Fee (Placeholder - Needs linking to Addon) --}}
                                  <div class="md:col-span-2">
                                      <x-input-label for="courier_fee_option" :value="__('Courier fee (e.g., for I-20/Visa)')" class="text-gray-700 font-medium"/>
@@ -176,6 +248,51 @@
                                  </div>
                              </div>
                          </div>
+
+                        {{-- Additional Accommodation Options Section --}}
+                        <div id="additional-accommodation-section" class="mb-6" style="display: none;">
+                            <div class="flex justify-between items-center text-white bg-bayswater-blue p-2 rounded-t-md">
+                                <h4 class="text-md font-semibold">Additional Accommodation</h4>
+                                <button type="button" id="remove-additional-accommodation-btn-top" class="inline-flex items-center px-2 py-1 bg-red-500 text-white text-xs font-medium rounded hover:bg-red-600 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Remove
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-b-md">
+                                {{-- Accommodation Selection --}}
+                                <div>
+                                    <x-input-label for="additional_accommodation_id" :value="__('Accommodation')" class="text-gray-700 font-medium"/>
+                                    <select name="additional_accommodation_id" id="additional_accommodation_id" class="block mt-1 w-full border-gray-300 bg-white text-gray-700 focus:border-bayswater-blue focus:ring-bayswater-blue rounded-md shadow-sm">
+                                        <option value="">-- Select Accommodation --</option>
+                                        @foreach($accommodations as $accom)
+                                            <option value="{{ $accom->id }}" data-school="{{ $accom->school_id }}" data-requires-christmas-supplement="{{ $accom->requires_christmas_supplement ? '1' : '0' }}" {{ old('additional_accommodation_id') == $accom->id ? 'selected' : '' }}>{{ $accom->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('additional_accommodation_id')" class="mt-2" />
+                                </div>
+                                {{-- Accommodation Weeks --}}
+                                <div id="additional_accommodation_duration_div">
+                                    <x-input-label for="additional_accommodation_duration_weeks" :value="__('Accommodation Duration (weeks)')" class="text-gray-700 font-medium"/>
+                                    <select id="additional_accommodation_duration_weeks" name="additional_accommodation_duration_weeks" class="block mt-1 w-full border-gray-300 bg-white text-gray-700 focus:border-bayswater-blue focus:ring-bayswater-blue rounded-md shadow-sm">
+                                        <option value="">-- Select Accommodation Duration --</option>
+                                        {{-- Options will be populated by JS --}}
+                                    </select>
+                                    <p id="additional_accommodation_budget_info" class="mt-1 text-sm text-gray-500">Total accommodation weeks cannot exceed total course duration.</p>
+                                    <x-input-error :messages="$errors->get('additional_accommodation_duration_weeks')" class="mt-2" />
+                                </div>
+                                {{-- Remove Button --}}
+                                <div class="flex items-end">
+                                    <button type="button" id="remove-additional-accommodation-btn" class="inline-flex items-center px-4 py-2 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Remove Additional Accommodation
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
                          {{-- Optional Extras Section --}}
                          <div class="mb-6">
@@ -245,48 +362,77 @@
                                 </div>
                             @endif
 
-                            {{-- Course --}}
+                            {{-- Courses --}}
                             <div class="mb-6">
-                                <h4 class="font-semibold text-bayswater-blue mb-2">Course</h4>
+                                <h4 class="font-semibold text-bayswater-blue mb-2">Courses</h4>
                                 @php
-                                    $courseTuition = 0;
-                                    $courseName = '';
+                                    $courseItems = [];
                                     foreach ($costBreakdown['items'] as $item) {
                                         if ($item['category'] === 'tuition') {
-                                            $courseTuition = $item['amount'];
-                                            $courseName = $item['name'];
-                                            break;
+                                            $courseItems[] = $item;
                                         }
                                     }
                                 @endphp
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm">{{ $courseName }}</span>
-                                    <span class="font-semibold">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($courseTuition, 2) }}</span>
-                                </div>
-                                <div class="text-sm text-gray-600 mt-2">
-                                    <p><strong>Start date:</strong> {{ \Carbon\Carbon::parse($costBreakdown['course_start_date'])->format('d M Y') }}</p>
-                                    <p><strong>Duration:</strong> {{ $costBreakdown['course_duration_weeks'] }} weeks</p>
-                                </div>
+
+                                @if(count($courseItems) > 0)
+                                    @foreach($courseItems as $index => $courseItem)
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="text-sm">{{ $courseItem['name'] }}</span>
+                                            <span class="font-semibold">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($courseItem['amount'], 2) }}</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600 mt-2 mb-4">
+                                            @if(isset($costBreakdown['courses'][$index]))
+                                                <p><strong>Start date:</strong> {{ \Carbon\Carbon::parse($costBreakdown['courses'][$index]['start_date'])->format('d M Y') }}</p>
+                                                <p><strong>End date:</strong> {{ \Carbon\Carbon::parse($costBreakdown['courses'][$index]['end_date'])->format('d M Y') }}</p>
+                                                <p><strong>Duration:</strong> {{ $costBreakdown['courses'][$index]['duration_weeks'] }} weeks</p>
+                                            @elseif($index === 0 && isset($costBreakdown['course_start_date']))
+                                                <p><strong>Start date:</strong> {{ \Carbon\Carbon::parse($costBreakdown['course_start_date'])->format('d M Y') }}</p>
+                                                <p><strong>End date:</strong> {{ isset($costBreakdown['course_end_date']) ? \Carbon\Carbon::parse($costBreakdown['course_end_date'])->format('d M Y') : 'N/A' }}</p>
+                                                <p><strong>Duration:</strong> {{ $costBreakdown['course_duration_weeks'] ?? 'N/A' }} weeks</p>
+                                            @else
+                                                <p><strong>Start date:</strong> N/A</p>
+                                                <p><strong>End date:</strong> N/A</p>
+                                                <p><strong>Duration:</strong> N/A weeks</p>
+                                            @endif
+                                        </div>
+                                        @if(!$loop->last)<hr class="my-2">@endif
+                                    @endforeach
+                                @else
+                                    <div class="text-sm text-gray-600">
+                                        <p>No course selected</p>
+                                    </div>
+                                @endif
                             </div>
 
-                            {{-- Accommodation --}}
+                            {{-- Accommodations --}}
                             @php
                                 $accommodationTotal = $costBreakdown['subtotals']['accommodation'] ?? 0;
-                                $accommodationName = '';
+                                $accommodationItems = [];
                                 foreach ($costBreakdown['items'] as $item) {
                                     if ($item['category'] === 'accommodation' && !str_contains($item['name'], 'Fee')) {
-                                        $accommodationName = $item['name'];
-                                        break;
+                                        $accommodationItems[] = $item;
                                     }
                                 }
                             @endphp
                             @if($accommodationTotal > 0)
                             <div class="mb-6">
                                 <h4 class="font-semibold text-bayswater-blue mb-2">Accommodation</h4>
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm">{{ $accommodationName }}</span>
-                                    <span class="font-semibold">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($accommodationTotal, 2) }}</span>
-                                </div>
+                                @foreach($accommodationItems as $index => $accommodationItem)
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm">{{ $accommodationItem['name'] }}</span>
+                                        <span class="font-semibold">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($accommodationItem['amount'], 2) }}</span>
+                                    </div>
+                                    <div class="text-sm text-gray-600 mt-2 mb-4">
+                                        @if(isset($costBreakdown['accommodations'][$index]))
+                                            <p><strong>Duration:</strong> {{ $costBreakdown['accommodations'][$index]['duration_weeks'] }} weeks</p>
+                                        @elseif($index === 0 && isset($costBreakdown['accommodation_duration_weeks']))
+                                            <p><strong>Duration:</strong> {{ $costBreakdown['accommodation_duration_weeks'] ?? 'N/A' }} weeks</p>
+                                        @else
+                                            <p><strong>Duration:</strong> N/A weeks</p>
+                                        @endif
+                                    </div>
+                                    @if(!$loop->last)<hr class="my-2">@endif
+                                @endforeach
                             </div>
                             @endif
 
@@ -432,10 +578,28 @@
         document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM fully loaded');
 
+            // Check if remove buttons exist
+            const removeCourseBtn = document.getElementById('remove-additional-course-btn');
+            const removeAccommodationBtn = document.getElementById('remove-additional-accommodation-btn');
+            console.log('Remove course button exists:', !!removeCourseBtn);
+            console.log('Remove accommodation button exists:', !!removeAccommodationBtn);
+
             // DIAGNOSTIC: Inspect HTML structure when DOM is loaded
             setTimeout(function() {
                 console.log('\n=== INITIAL HTML INSPECTION (DOM loaded) ===');
                 inspectHtmlStructure();
+
+                // Initialize budget info visibility
+                const mainBudgetInfo = document.getElementById('accommodation_budget_info');
+                const additionalBudgetInfo = document.getElementById('additional_accommodation_budget_info');
+
+                if (mainBudgetInfo) {
+                    mainBudgetInfo.style.display = accommodationSelect.value ? 'block' : 'none';
+                }
+
+                if (additionalBudgetInfo) {
+                    additionalBudgetInfo.style.display = additionalAccommodationSelect.value ? 'block' : 'none';
+                }
             }, 500);
 
             // --- Get DOM Elements ---
@@ -460,6 +624,29 @@
             const loadingIndicator = document.createElement('div');
             loadingIndicator.className = 'text-center py-4';
             loadingIndicator.innerHTML = '<div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-bayswater-blue"></div><p class="mt-2 text-gray-600">Calculating...</p>';
+
+            // Additional course elements
+            const addAdditionalCourseBtn = document.getElementById('add-additional-course-btn');
+            const removeAdditionalCourseBtn = document.getElementById('remove-additional-course-btn');
+            const removeAdditionalCourseBtnTop = document.getElementById('remove-additional-course-btn-top');
+            const additionalCourseSection = document.getElementById('additional-course-section');
+            const additionalCourseSelect = document.getElementById('additional_course_id');
+            const additionalCourseDurationSelect = document.getElementById('additional_course_duration_weeks');
+            const additionalStartDateInput = document.getElementById('additional_course_start_date');
+
+            // Additional accommodation elements
+            const addAdditionalAccommodationBtn = document.getElementById('add-additional-accommodation-btn');
+            const removeAdditionalAccommodationBtn = document.getElementById('remove-additional-accommodation-btn');
+            const removeAdditionalAccommodationBtnTop = document.getElementById('remove-additional-accommodation-btn-top');
+            const additionalAccommodationSection = document.getElementById('additional-accommodation-section');
+            const additionalAccommodationSelect = document.getElementById('additional_accommodation_id');
+            const additionalAccommodationDurationSelect = document.getElementById('additional_accommodation_duration_weeks');
+
+            // Log the existence of all remove buttons
+            console.log('Remove course button exists:', !!removeAdditionalCourseBtn);
+            console.log('Remove course button top exists:', !!removeAdditionalCourseBtnTop);
+            console.log('Remove accommodation button exists:', !!removeAdditionalAccommodationBtn);
+            console.log('Remove accommodation button top exists:', !!removeAdditionalAccommodationBtnTop);
 
             // --- Helper Functions ---
 
@@ -664,11 +851,33 @@
                 }
             }
 
+            // Function to calculate the total course duration budget (main + additional)
+            function calculateTotalCourseDurationBudget() {
+                const mainCourseDuration = parseInt(courseDurationSelect.value) || 0;
+                const additionalCourseDuration = parseInt(additionalCourseDurationSelect.value) || 0;
+                const additionalCourseSelected = additionalCourseSection.style.display !== 'none' && additionalCourseSelect.value;
+
+                // Calculate total budget based on selected courses
+                let totalBudget = mainCourseDuration;
+                if (additionalCourseSelected && additionalCourseDuration > 0) {
+                    totalBudget += additionalCourseDuration;
+                }
+
+                console.log('Total course duration budget:', totalBudget, 'weeks');
+                return totalBudget;
+            }
+
             function toggleAccommodationDuration() {
                 const show = accommodationSelect.value !== "";
                 accommodationDurationDiv.style.display = show ? '' : 'none';
                 accommodationDurationSelect.required = show;
                 accommodationDurationSelect.disabled = !show || accommodationSelect.disabled;
+
+                // Show/hide the budget info message
+                const budgetInfo = document.getElementById('accommodation_budget_info');
+                if (budgetInfo) {
+                    budgetInfo.style.display = show ? 'block' : 'none';
+                }
 
                 if (show && !accommodationSelect.disabled) {
                     console.log('Showing accommodation duration dropdown');
@@ -699,7 +908,337 @@
                 }
             }
 
-            // --- Event Listeners ---
+            // --- Event Listeners for Additional Course and Accommodation ---
+            // Show/hide additional course section
+            addAdditionalCourseBtn.addEventListener('click', function() {
+                additionalCourseSection.style.display = 'block';
+                addAdditionalCourseBtn.style.display = 'none';
+                // Filter course options based on selected school
+                if (schoolSelect.value) {
+                    filterOptions(additionalCourseSelect, 'data-school', schoolSelect.value);
+                }
+            });
+
+            // Function to remove additional course section
+            function removeAdditionalCourse() {
+                // Hide the additional course section
+                additionalCourseSection.style.display = 'none';
+                // Show the add button again
+                addAdditionalCourseBtn.style.display = 'block';
+
+                // Reset all fields in the additional course section
+                additionalCourseSelect.value = '';
+                additionalStartDateInput.value = '';
+                additionalCourseDurationSelect.innerHTML = '<option value="">-- Select Course Duration --</option>';
+
+                // Clear any validation errors that might be displayed
+                const errorElements = additionalCourseSection.querySelectorAll('.text-red-600');
+                errorElements.forEach(el => {
+                    if (el.id !== 'additional_start_date_error') { // Don't clear the date validation message element itself
+                        el.style.display = 'none';
+                    }
+                });
+
+                // Trigger calculation update to reflect the removal
+                setTimeout(autoCalculate, 50);
+
+                console.log('Additional course section removed');
+            }
+
+            // Remove additional course section - bottom button
+            removeAdditionalCourseBtn.addEventListener('click', removeAdditionalCourse);
+
+            // Remove additional course section - top button
+            removeAdditionalCourseBtnTop.addEventListener('click', removeAdditionalCourse);
+
+            // Show/hide additional accommodation section
+            addAdditionalAccommodationBtn.addEventListener('click', function() {
+                additionalAccommodationSection.style.display = 'block';
+                addAdditionalAccommodationBtn.style.display = 'none';
+                // Filter accommodation options based on selected school
+                if (schoolSelect.value) {
+                    filterOptions(additionalAccommodationSelect, 'data-school', schoolSelect.value);
+                }
+            });
+
+            // Function to remove additional accommodation section
+            function removeAdditionalAccommodation() {
+                // Hide the additional accommodation section
+                additionalAccommodationSection.style.display = 'none';
+                // Show the add button again
+                addAdditionalAccommodationBtn.style.display = 'block';
+
+                // Reset all fields in the additional accommodation section
+                additionalAccommodationSelect.value = '';
+                additionalAccommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
+
+                // Clear any validation errors that might be displayed
+                const errorElements = additionalAccommodationSection.querySelectorAll('.text-red-600');
+                errorElements.forEach(el => {
+                    el.style.display = 'none';
+                });
+
+                // Trigger calculation update to reflect the removal
+                setTimeout(autoCalculate, 50);
+
+                console.log('Additional accommodation section removed');
+            }
+
+            // Remove additional accommodation section - bottom button
+            removeAdditionalAccommodationBtn.addEventListener('click', removeAdditionalAccommodation);
+
+            // Remove additional accommodation section - top button
+            removeAdditionalAccommodationBtnTop.addEventListener('click', removeAdditionalAccommodation);
+
+            // When additional course changes, populate duration dropdown
+            additionalCourseSelect.addEventListener('change', function() {
+                if (this.value) {
+                    populateAdditionalCourseDurationDropdown();
+                } else {
+                    additionalCourseDurationSelect.innerHTML = '<option value="">-- Select Course Duration --</option>';
+                }
+                // Trigger calculation update
+                setTimeout(autoCalculate, 50);
+            });
+
+            // Function to synchronize additional accommodation duration with additional course duration
+            function synchronizeAdditionalAccommodationDuration() {
+                // Only proceed if additional accommodation is selected
+                if (!additionalAccommodationSelect.value) return;
+
+                // Get the current values
+                const additionalCourseDuration = parseInt(additionalCourseDurationSelect.value);
+                const currentAdditionalAccommodationDuration = parseInt(additionalAccommodationDurationSelect.value);
+
+                // Check if the current selection is the default empty option
+                const isDefaultSelected = additionalAccommodationDurationSelect.value === '';
+
+                // Only proceed if additional course duration is valid
+                if (isNaN(additionalCourseDuration)) return;
+
+                console.log('Synchronizing additional accommodation duration with additional course duration:', additionalCourseDuration);
+
+                // Check if we need to repopulate the dropdown
+                let needsRepopulation = false;
+
+                // Case 1: Additional course duration increased beyond available options
+                const maxAvailableOption = getMaxAvailableAdditionalAccommodationWeek();
+                if (additionalCourseDuration > maxAvailableOption) {
+                    console.log('Additional course duration increased beyond available options. Max available:', maxAvailableOption);
+                    needsRepopulation = true;
+                }
+
+                // Case 2: Additional accommodation duration exceeds additional course duration
+                if (!isNaN(currentAdditionalAccommodationDuration) && currentAdditionalAccommodationDuration > additionalCourseDuration) {
+                    console.log('Additional accommodation duration exceeds additional course duration');
+                    needsRepopulation = true;
+                }
+
+                // Case 3: No additional accommodation duration selected (but not the default empty option)
+                if (isNaN(currentAdditionalAccommodationDuration) && !isDefaultSelected) {
+                    console.log('No additional accommodation duration selected');
+                    needsRepopulation = true;
+                }
+
+                // Repopulate if needed
+                if (needsRepopulation) {
+                    console.log('Repopulating additional accommodation weeks dropdown');
+                    // Only force course duration selection if the current selection is not the default empty option
+                    populateAdditionalAccommodationDurationDropdown(!isDefaultSelected);
+                    return; // populateAdditionalAccommodationDurationDropdown will handle selection
+                }
+
+                // If we get here, we don't need to repopulate, just update the existing options
+                console.log('Updating existing additional accommodation duration options');
+
+                // Disable options that exceed additional course duration
+                let hasValidSelection = false;
+                let highestValidOption = 0;
+                let highestValidIndex = 0;
+
+                Array.from(additionalAccommodationDurationSelect.options).forEach((option, index) => {
+                    const optionValue = parseInt(option.value);
+                    if (!isNaN(optionValue)) {
+                        // Disable options that exceed additional course duration
+                        if (optionValue > additionalCourseDuration) {
+                            option.disabled = true;
+                            option.textContent = `${optionValue} week${optionValue > 1 ? 's' : ''} (exceeds course duration)`;
+
+                            // If this option is currently selected, we'll need to change the selection
+                            if (option.selected) {
+                                hasValidSelection = false;
+                            }
+                        } else {
+                            option.disabled = false;
+                            option.textContent = `${optionValue} week${optionValue > 1 ? 's' : ''}`;
+
+                            // Keep track of the highest valid option
+                            if (optionValue > highestValidOption) {
+                                highestValidOption = optionValue;
+                                highestValidIndex = index;
+                            }
+
+                            // If this option is currently selected, it's valid
+                            if (option.selected) {
+                                hasValidSelection = true;
+                            }
+                        }
+                    }
+                });
+
+                // If the current selection is invalid, select the course duration or highest valid option
+                if (!hasValidSelection && additionalAccommodationDurationSelect.value) {
+                    console.log('Current additional accommodation duration selection is invalid, updating...');
+
+                    // Try to select the option that matches the course duration
+                    let foundCourseDurationOption = false;
+                    for (let i = 0; i < additionalAccommodationDurationSelect.options.length; i++) {
+                        const option = additionalAccommodationDurationSelect.options[i];
+                        const optionValue = parseInt(option.value);
+                        if (!isNaN(optionValue) && optionValue === additionalCourseDuration) {
+                            additionalAccommodationDurationSelect.selectedIndex = i;
+                            console.log('Selected additional accommodation duration to match course duration:', additionalCourseDuration);
+                            foundCourseDurationOption = true;
+                            break;
+                        }
+                    }
+
+                    // If we couldn't find an option matching the course duration, select the highest valid option
+                    if (!foundCourseDurationOption && highestValidOption > 0) {
+                        additionalAccommodationDurationSelect.selectedIndex = highestValidIndex;
+                        console.log('Selected highest valid additional accommodation duration:', highestValidOption);
+                    }
+
+                    // Trigger change event to update calculations
+                    additionalAccommodationDurationSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
+            // Helper function to get the maximum available additional accommodation week option
+            function getMaxAvailableAdditionalAccommodationWeek() {
+                let max = 0;
+                Array.from(additionalAccommodationDurationSelect.options).forEach(option => {
+                    const value = parseInt(option.value);
+                    if (!isNaN(value) && value > max) {
+                        max = value;
+                    }
+                });
+                return max;
+            }
+
+            // When additional course duration changes
+            additionalCourseDurationSelect.addEventListener('change', function() {
+                console.log('Additional course duration changed to: ' + this.value);
+
+                // Only proceed if additional accommodation is selected
+                if (additionalAccommodationSelect.value) {
+                    console.log('Additional accommodation is selected, repopulating duration dropdown');
+                    // Repopulate the additional accommodation duration dropdown
+                    populateAdditionalAccommodationDurationDropdown(true); // Force course duration selection
+                }
+
+                // Trigger calculation update
+                setTimeout(autoCalculate, 50);
+            });
+
+            // Add event listener for additional accommodation duration dropdown
+            additionalAccommodationDurationSelect.addEventListener('change', function(event) {
+                console.log('Additional accommodation duration changed to: ' + this.value);
+
+                // Check if this event was triggered with the preventLoop flag
+                const preventLoop = event.detail && event.detail.preventLoop;
+
+                // Store the selected value to ensure it's retained
+                const selectedValue = this.value;
+                console.log('Storing selected additional accommodation duration:', selectedValue);
+
+                // Validate that the selected accommodation duration doesn't exceed the course duration
+                const additionalCourseDuration = parseInt(additionalCourseDurationSelect.value) || 0;
+                const selectedDuration = parseInt(this.value) || 0;
+
+                if (additionalCourseDuration > 0 && selectedDuration > additionalCourseDuration) {
+                    console.log('Selected accommodation duration exceeds course duration, resetting to course duration');
+
+                    // Find the option that matches the course duration
+                    for (let i = 0; i < this.options.length; i++) {
+                        if (parseInt(this.options[i].value) === additionalCourseDuration) {
+                            this.selectedIndex = i;
+                            break;
+                        }
+                    }
+
+                    // If no matching option was found, select the highest valid option
+                    if (parseInt(this.value) > additionalCourseDuration) {
+                        let highestValidOption = 0;
+                        let highestValidIndex = 0;
+
+                        for (let i = 0; i < this.options.length; i++) {
+                            const optionValue = parseInt(this.options[i].value) || 0;
+                            if (optionValue > 0 && optionValue <= additionalCourseDuration && optionValue > highestValidOption) {
+                                highestValidOption = optionValue;
+                                highestValidIndex = i;
+                            }
+                        }
+
+                        if (highestValidOption > 0) {
+                            this.selectedIndex = highestValidIndex;
+                        }
+                    }
+
+                    // Exit early to avoid double calculation
+                    return;
+                }
+
+                // Update main accommodation options when additional accommodation changes
+                // Only if this wasn't triggered by an internal update (to prevent loops)
+                if (!preventLoop && accommodationSelect.value) {
+                    console.log('Additional accommodation duration changed, updating main accommodation options');
+                    populateAccommodationWeeks();
+                }
+
+                // Trigger calculation if needed
+                if (startDateInput.value && additionalAccommodationSelect.value && selectedValue) {
+                    autoCalculate();
+                }
+            });
+
+            // When additional start date changes
+            additionalStartDateInput.addEventListener('change', function() {
+                // Check if it's a Monday
+                const date = new Date(this.value);
+                const isMonday = date.getDay() === 1; // 0 is Sunday, 1 is Monday
+                document.getElementById('additional_start_date_error').style.display = isMonday ? 'none' : 'block';
+                // Trigger calculation update
+                setTimeout(autoCalculate, 50);
+            });
+
+            // When additional accommodation changes
+            additionalAccommodationSelect.addEventListener('change', function() {
+                console.log('Additional accommodation changed to: ' + this.value);
+
+                // Show/hide the budget info message
+                const budgetInfo = document.getElementById('additional_accommodation_budget_info');
+                if (budgetInfo) {
+                    budgetInfo.style.display = this.value ? 'block' : 'none';
+                }
+
+                if (this.value) {
+                    populateAdditionalAccommodationDurationDropdown();
+                    // If additional course duration is already selected, synchronize accommodation duration
+                    if (additionalCourseDurationSelect.value) {
+                        synchronizeAdditionalAccommodationDuration();
+                    }
+                } else {
+                    additionalAccommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
+                }
+                // Trigger calculation update
+                setTimeout(autoCalculate, 50);
+            });
+
+            // This is a duplicate event listener that was causing issues
+            // The main event listener is defined above
+
+            // --- Original Event Listeners ---
             // When country changes, filter cities
             countrySelect.addEventListener('change', function() {
                 console.log('Country changed to: ' + this.value);
@@ -714,6 +1253,23 @@
                 populateAirportDropdowns([]); // Clear airport dropdowns
                 arrivalAirportSelect.disabled = true; // Disable airport dropdowns
                 departureAirportSelect.disabled = true;
+
+                // Reset additional course section
+                if (additionalCourseSection.style.display !== 'none') {
+                    additionalCourseSection.style.display = 'none';
+                    addAdditionalCourseBtn.style.display = 'block';
+                    additionalCourseSelect.value = '';
+                    additionalStartDateInput.value = '';
+                    additionalCourseDurationSelect.innerHTML = '<option value="">-- Select Course Duration --</option>';
+                }
+
+                // Reset additional accommodation section
+                if (additionalAccommodationSection.style.display !== 'none') {
+                    additionalAccommodationSection.style.display = 'none';
+                    addAdditionalAccommodationBtn.style.display = 'block';
+                    additionalAccommodationSelect.value = '';
+                    additionalAccommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
+                }
 
                 // Hide accommodation duration and Christmas section
                 toggleAccommodationDuration(); // This will also call updateChristmasSectionVisibility
@@ -790,6 +1346,23 @@
                 arrivalAirportSelect.disabled = true; // Disable airport dropdowns
                 departureAirportSelect.disabled = true;
 
+                // Reset additional course section
+                if (additionalCourseSection.style.display !== 'none') {
+                    additionalCourseSection.style.display = 'none';
+                    addAdditionalCourseBtn.style.display = 'block';
+                    additionalCourseSelect.value = '';
+                    additionalStartDateInput.value = '';
+                    additionalCourseDurationSelect.innerHTML = '<option value="">-- Select Course Duration --</option>';
+                }
+
+                // Reset additional accommodation section
+                if (additionalAccommodationSection.style.display !== 'none') {
+                    additionalAccommodationSection.style.display = 'none';
+                    addAdditionalAccommodationBtn.style.display = 'block';
+                    additionalAccommodationSelect.value = '';
+                    additionalAccommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
+                }
+
                 // Hide accommodation duration and Christmas section
                 toggleAccommodationDuration(); // This will also call updateChristmasSectionVisibility
 
@@ -858,6 +1431,23 @@
                 populateAirportDropdowns([]); // Clear airport dropdowns
                 arrivalAirportSelect.disabled = true; // Disable airport dropdowns initially
                 departureAirportSelect.disabled = true;
+
+                // Reset additional course section
+                if (additionalCourseSection.style.display !== 'none') {
+                    additionalCourseSection.style.display = 'none';
+                    addAdditionalCourseBtn.style.display = 'block';
+                    additionalCourseSelect.value = '';
+                    additionalStartDateInput.value = '';
+                    additionalCourseDurationSelect.innerHTML = '<option value="">-- Select Course Duration --</option>';
+                }
+
+                // Reset additional accommodation section
+                if (additionalAccommodationSection.style.display !== 'none') {
+                    additionalAccommodationSection.style.display = 'none';
+                    addAdditionalAccommodationBtn.style.display = 'block';
+                    additionalAccommodationSelect.value = '';
+                    additionalAccommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
+                }
 
                 // Reset school-specific details
                 extraAccommodationWeeks = 0;
@@ -1020,6 +1610,15 @@
                 // No need to call autoCalculate here as it will be triggered by the course duration change
             });
 
+            // Function to calculate the total course duration budget
+            function calculateTotalCourseDurationBudget() {
+                const mainCourseDuration = parseInt(courseDurationSelect.value) || 0;
+                const additionalCourseDuration = parseInt(additionalCourseDurationSelect.value) || 0;
+                const totalBudget = mainCourseDuration + additionalCourseDuration;
+                console.log('Total course duration budget:', totalBudget, '(main:', mainCourseDuration, '+ additional:', additionalCourseDuration, ')');
+                return totalBudget;
+            }
+
             // Function to synchronize accommodation duration with course duration
             function synchronizeAccommodationDuration() {
                 // Only proceed if accommodation is selected
@@ -1029,57 +1628,23 @@
                 const courseDuration = parseInt(courseDurationSelect.value);
                 const currentAccommodationDuration = parseInt(accommodationDurationSelect.value);
 
+                // Check if the current selection is the default empty option
+                const isDefaultSelected = accommodationDurationSelect.value === '';
+
                 // Only proceed if course duration is valid
                 if (isNaN(courseDuration)) return;
 
                 console.log('Synchronizing accommodation duration with course duration:', courseDuration);
 
-                // Check if we need to repopulate the dropdown
-                let needsRepopulation = false;
+                // Always repopulate the dropdown to ensure it matches the course duration
+                console.log('Repopulating accommodation weeks dropdown to match course duration');
 
-                // Case 1: Course duration increased beyond available options
-                const maxAvailableOption = getMaxAvailableAccommodationWeek();
-                if (courseDuration > maxAvailableOption) {
-                    console.log('Course duration increased beyond available options. Max available:', maxAvailableOption);
-                    needsRepopulation = true;
+                // Only force course duration selection if the current selection is not the default empty option
+                if (!isDefaultSelected) {
+                    populateAccommodationWeeks(true); // Pass true to force selection of course duration
+                } else {
+                    populateAccommodationWeeks(false); // Don't force selection, keep the default empty option
                 }
-
-                // Case 2: Accommodation duration exceeds course duration
-                if (!isNaN(currentAccommodationDuration) && currentAccommodationDuration > courseDuration) {
-                    console.log('Accommodation duration exceeds course duration');
-                    needsRepopulation = true;
-                }
-
-                // Case 3: No accommodation duration selected
-                if (isNaN(currentAccommodationDuration)) {
-                    console.log('No accommodation duration selected');
-                    needsRepopulation = true;
-                }
-
-                // Repopulate if needed
-                if (needsRepopulation) {
-                    console.log('Repopulating accommodation weeks dropdown');
-                    populateAccommodationWeeks();
-                    return; // populateAccommodationWeeks will handle selection
-                }
-
-                // If we get here, we don't need to repopulate, just update the existing options
-                console.log('Updating existing accommodation duration options');
-
-                // Disable options that exceed course duration
-                Array.from(accommodationDurationSelect.options).forEach(option => {
-                    const optionValue = parseInt(option.value);
-                    if (!isNaN(optionValue)) {
-                        // Disable options that exceed course duration
-                        if (optionValue > courseDuration) {
-                            option.disabled = true;
-                            option.textContent = `${optionValue} week${optionValue > 1 ? 's' : ''} (exceeds course duration)`;
-                        } else {
-                            option.disabled = false;
-                            option.textContent = `${optionValue} week${optionValue > 1 ? 's' : ''}`;
-                        }
-                    }
-                });
             }
 
             // Helper function to get the maximum available accommodation week option
@@ -1101,6 +1666,12 @@
                 // Synchronize accommodation duration with course duration
                 synchronizeAccommodationDuration();
 
+                // Also update additional accommodation duration if it's visible and has a value
+                if (additionalAccommodationSection.style.display !== 'none' && additionalAccommodationSelect.value) {
+                    console.log('Additional accommodation is visible and selected, updating its duration to match course duration');
+                    populateAdditionalAccommodationDurationDropdown(true); // Force course duration selection
+                }
+
                 // Update Christmas section visibility (existing functionality)
                 updateChristmasSectionVisibility();
 
@@ -1118,9 +1689,38 @@
             });
 
             // Add event listener for accommodation duration select
-            accommodationDurationSelect.addEventListener('change', function() {
+            accommodationDurationSelect.addEventListener('change', function(event) {
                 console.log('Accommodation duration changed to: ' + this.value);
+
+                // Check if this event was triggered with the preventLoop flag
+                const preventLoop = event.detail && event.detail.preventLoop;
+
                 updateChristmasSectionVisibility(); // Check overlap with new duration
+
+                // Update additional accommodation options when main accommodation duration changes
+                // Always update if additional accommodation is visible and selected, even if triggered internally
+                // This is critical for when main accommodation duration is reduced
+                if (additionalAccommodationSection.style.display !== 'none' && additionalAccommodationSelect.value) {
+                    console.log('Main accommodation duration changed, updating additional accommodation options');
+                    // Store the current value before repopulating
+                    const currentAdditionalValue = additionalAccommodationDurationSelect.value;
+                    console.log('Storing current additional accommodation duration before update:', currentAdditionalValue);
+
+                    // Repopulate the dropdown
+                    populateAdditionalAccommodationDurationDropdown();
+
+                    // If the dropdown was reset to default, try to restore the previous value
+                    if (additionalAccommodationDurationSelect.value === '' && currentAdditionalValue) {
+                        // Find and select the option with the previous value if it exists
+                        for (let i = 0; i < additionalAccommodationDurationSelect.options.length; i++) {
+                            if (additionalAccommodationDurationSelect.options[i].value === currentAdditionalValue) {
+                                additionalAccommodationDurationSelect.selectedIndex = i;
+                                console.log('Restored previous additional accommodation duration:', currentAdditionalValue);
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 // Trigger calculation if needed
                 if (startDateInput.value && courseSelect.value && courseDurationSelect.value) {
@@ -1129,19 +1729,42 @@
             });
 
 
-            // --- Accommodation Weeks Dropdown Population --- (Modified to respect course duration limits)
-            function populateAccommodationWeeks() {
-                console.log('Populating accommodation weeks dropdown');
+            // --- Accommodation Weeks Dropdown Population --- (Modified to respect course duration limits and total budget)
+            function populateAccommodationWeeks(forceCourseDuration = false) {
+                console.log('Populating accommodation weeks dropdown' + (forceCourseDuration ? ' (forcing course duration)' : ''));
 
                 // Get the selected course duration
                 const courseDuration = parseInt(courseDurationSelect.value) || 0;
                 console.log('Selected course duration: ' + courseDuration + ' weeks');
 
-                // Limit accommodation weeks to course duration or use 52 as fallback
+                // Calculate total course duration budget
+                const totalCourseBudget = calculateTotalCourseDurationBudget();
+
+                // Get the current additional accommodation duration
+                const additionalAccommodationDuration = parseInt(additionalAccommodationDurationSelect.value) || 0;
+                const additionalAccommodationSelected = additionalAccommodationSection.style.display !== 'none' && additionalAccommodationSelect.value;
+
+                // Calculate the maximum allowed for this dropdown
                 let maxAccommodationWeeks = 52; // Default max if no course duration
+
                 if (courseDuration > 0) {
-                    maxAccommodationWeeks = courseDuration;
+                    if (additionalAccommodationSelected && additionalAccommodationDuration > 0) {
+                        // If additional accommodation is selected, limit main accommodation to total budget minus additional accommodation
+                        const remainingBudget = totalCourseBudget - additionalAccommodationDuration;
+                        maxAccommodationWeeks = Math.min(courseDuration, Math.max(0, remainingBudget));
+                        console.log('Additional accommodation selected with', additionalAccommodationDuration, 'weeks. Limiting main accommodation to', maxAccommodationWeeks, 'weeks');
+                    } else {
+                        // If no additional accommodation, limit to main course duration
+                        maxAccommodationWeeks = courseDuration;
+                    }
+
+                    // Always ensure we have at least one option if there's any budget left
+                    if (maxAccommodationWeeks === 0 && totalCourseBudget > additionalAccommodationDuration) {
+                        maxAccommodationWeeks = 1;
+                        console.log('Ensuring at least 1 week is available for main accommodation');
+                    }
                 }
+
                 console.log('Max accommodation weeks: ' + maxAccommodationWeeks);
 
                 // If no course duration or it's invalid, set a reasonable default
@@ -1160,6 +1783,13 @@
                 // Populate dropdown options
                 accommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
 
+                // Mark if the current value exceeds the course duration or if we should force course duration
+                let currentValueExceedsCourse = forceCourseDuration;
+                if (currentValue && courseDuration > 0 && parseInt(currentValue) > courseDuration) {
+                    console.log('Current accommodation duration exceeds course duration, will select course duration instead');
+                    currentValueExceedsCourse = true;
+                }
+
                 // Generate options from 1 to maxAccommodationWeeks
                 for (let i = 1; i <= maxAccommodationWeeks; i++) {
                     const option = document.createElement('option');
@@ -1173,13 +1803,19 @@
                         option.textContent = `${i} week${i > 1 ? 's' : ''}`;
                     }
 
-                    // First try to select the current value if it matches
-                    if (currentValue && parseInt(currentValue) === i) {
+                    // Mark the option that matches the course duration
+                    if (courseDuration > 0 && i === courseDuration) {
+                        option.setAttribute('data-course-duration-match', 'true');
+                    }
+
+                    // First try to select the current value if it matches and doesn't exceed course duration
+                    // Only do this if we're not forcing course duration
+                    if (!forceCourseDuration && currentValue && parseInt(currentValue) === i && !currentValueExceedsCourse) {
                         option.selected = true;
                         valueSelected = true;
                     }
-                    // If no current value, try the old form value
-                    else if (!valueSelected && oldValue && parseInt(oldValue) === i) {
+                    // If no current value, try the old form value (only if not forcing course duration)
+                    else if (!forceCourseDuration && !valueSelected && oldValue && parseInt(oldValue) === i && !(courseDuration > 0 && i > courseDuration)) {
                         option.selected = true;
                         valueSelected = true;
                     }
@@ -1189,21 +1825,25 @@
 
                 console.log('Accommodation weeks dropdown populated with ' + maxAccommodationWeeks + ' options');
 
-                // If no value was selected and we have options, select the course duration (or first option if no course duration)
-                if (!valueSelected && accommodationDurationSelect.options.length > 1) {
+                // If forcing course duration, or the current value exceeds the course duration, or no value was selected,
+                // select the course duration - but only if we're forcing course duration
+                if (forceCourseDuration && accommodationDurationSelect.options.length > 1) {
                     if (courseDuration > 0) {
                         // Find the option that matches the course duration
+                        let courseDurationOptionFound = false;
                         for (let i = 0; i < accommodationDurationSelect.options.length; i++) {
-                            if (parseInt(accommodationDurationSelect.options[i].value) === courseDuration) {
+                            const option = accommodationDurationSelect.options[i];
+                            if (option.getAttribute('data-course-duration-match') === 'true') {
                                 accommodationDurationSelect.selectedIndex = i;
                                 console.log('Auto-selected accommodation duration to match course duration:', courseDuration);
                                 valueSelected = true;
+                                courseDurationOptionFound = true;
                                 break;
                             }
                         }
 
                         // If no matching option was found, select the first option
-                        if (!valueSelected) {
+                        if (!courseDurationOptionFound) {
                             accommodationDurationSelect.selectedIndex = 1; // Select the first week option
                             console.log('No matching option for course duration, selected first option');
                         }
@@ -1213,10 +1853,14 @@
                     }
                 }
 
-                // Trigger change event if the value has changed
-                if (currentValue && accommodationDurationSelect.value !== currentValue) {
-                    console.log('Accommodation duration changed from', currentValue, 'to', accommodationDurationSelect.value);
-                    accommodationDurationSelect.dispatchEvent(new Event('change'));
+                // Only trigger change event if we actually changed the value
+                // This prevents potential infinite loops
+                if (valueSelected) {
+                    // Use a flag to prevent infinite loops
+                    const preventLoop = true;
+                    // Create a custom event with data
+                    const customEvent = new CustomEvent('change', { detail: { preventLoop } });
+                    accommodationDurationSelect.dispatchEvent(customEvent);
                 }
 
                 return valueSelected;
@@ -1343,9 +1987,11 @@
                 }
             });
 
-            // --- Initialize Flatpickr for Start Date --- (Keep existing logic)
+            // --- Initialize Flatpickr for Start Dates ---
             const currentYear = new Date().getFullYear();
-            flatpickr(startDateInput, {
+
+            // Common Flatpickr configuration for Monday-only date selection
+            const mondayOnlyConfig = {
                 minDate: `${currentYear}-01-01`, // Disable dates before current year
                 maxDate: `${currentYear + 1}-12-31`, // Disable dates after next year
                 disable: [
@@ -1356,9 +2002,23 @@
                     }
                 ],
                 dateFormat: "Y-m-d", // Ensure format matches HTML5 date input
+            };
+
+            // Initialize main course start date picker
+            flatpickr(startDateInput, {
+                ...mondayOnlyConfig,
                 onChange: function(selectedDates, dateStr, instance) {
                     // Trigger change event manually for Flatpickr
                     startDateInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // Initialize additional course start date picker
+            flatpickr(additionalStartDateInput, {
+                ...mondayOnlyConfig,
+                onChange: function(selectedDates, dateStr, instance) {
+                    // Trigger change event manually for Flatpickr
+                    additionalStartDateInput.dispatchEvent(new Event('change'));
                 }
             });
 
@@ -1418,8 +2078,18 @@
             //     populateAccommodationWeeks();
             // }
 
+            // Debounce function to prevent too many calculations in a short time
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    const context = this;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), wait);
+                };
+            }
+
             // --- Auto-Calculate Function ---
-            function autoCalculate() {
+            const _autoCalculate = function() {
                 console.log('Auto-calculate function called');
                 console.log('Course:', courseSelect.value);
                 console.log('Course Duration:', courseDurationSelect.value);
@@ -1437,14 +2107,15 @@
                     return; // Not enough data to calculate
                 }
 
-                // Check if accommodation is selected but no duration is chosen
-                if (accommodationSelect.value && !accommodationDurationSelect.value) {
-                    console.log('Accommodation selected but no duration chosen, using default of 1 week');
-                    // Auto-select the first accommodation duration option
-                    if (accommodationDurationSelect.options.length > 1) {
-                        accommodationDurationSelect.selectedIndex = 1; // Select the first week option
-                    }
-                }
+                // We no longer auto-select accommodation duration if none is chosen
+                // This allows users to revert back to the default option
+                // if (accommodationSelect.value && !accommodationDurationSelect.value) {
+                //     console.log('Accommodation selected but no duration chosen, using default of 1 week');
+                //     // Auto-select the first accommodation duration option
+                //     if (accommodationDurationSelect.options.length > 1) {
+                //         accommodationDurationSelect.selectedIndex = 1; // Select the first week option
+                //     }
+                // }
 
                 console.log('Auto-calculating with course=' + courseSelect.value + ', duration=' + courseDurationSelect.value);
 
@@ -1503,8 +2174,23 @@
                 if (arrivalAirportSelect.value) {
                     formData.append('arrival_transfer_airport_id', arrivalAirportSelect.value);
                 }
-                 if (departureAirportSelect.value) {
+                if (departureAirportSelect.value) {
                     formData.append('departure_transfer_airport_id', departureAirportSelect.value);
+                }
+
+                // Add additional course if visible and selected
+                if (additionalCourseSection.style.display !== 'none' && additionalCourseSelect.value) {
+                    formData.append('additional_course_id', additionalCourseSelect.value);
+                    formData.append('additional_course_start_date', additionalStartDateInput.value);
+                    formData.append('additional_course_duration_weeks', additionalCourseDurationSelect.value);
+                    console.log('Adding additional course:', additionalCourseSelect.value);
+                }
+
+                // Add additional accommodation if visible and selected
+                if (additionalAccommodationSection.style.display !== 'none' && additionalAccommodationSelect.value) {
+                    formData.append('additional_accommodation_id', additionalAccommodationSelect.value);
+                    formData.append('additional_accommodation_duration_weeks', additionalAccommodationDurationSelect.value);
+                    console.log('Adding additional accommodation:', additionalAccommodationSelect.value);
                 }
 
 
@@ -1640,7 +2326,10 @@
                     // Remove the event listener when the request is complete
                     window.removeEventListener('beforeunload', unloadHandler);
                 });
-            }
+            };
+
+            // Create a debounced version of the autoCalculate function
+            const autoCalculate = debounce(_autoCalculate, 300); // 300ms debounce
 
             // --- Add event listeners for auto-calculation ---
             // Add event listener for region dropdown
@@ -1659,6 +2348,23 @@
                 populateAirportDropdowns([]); // Clear airport dropdowns
                 arrivalAirportSelect.disabled = true; // Disable airport dropdowns
                 departureAirportSelect.disabled = true;
+
+                // Reset additional course section
+                if (additionalCourseSection.style.display !== 'none') {
+                    additionalCourseSection.style.display = 'none';
+                    addAdditionalCourseBtn.style.display = 'block';
+                    additionalCourseSelect.value = '';
+                    additionalStartDateInput.value = '';
+                    additionalCourseDurationSelect.innerHTML = '<option value="">-- Select Course Duration --</option>';
+                }
+
+                // Reset additional accommodation section
+                if (additionalAccommodationSection.style.display !== 'none') {
+                    additionalAccommodationSection.style.display = 'none';
+                    addAdditionalAccommodationBtn.style.display = 'block';
+                    additionalAccommodationSelect.value = '';
+                    additionalAccommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
+                }
 
                 // Hide accommodation duration and Christmas section
                 toggleAccommodationDuration(); // This will also call updateChristmasSectionVisibility
@@ -1790,18 +2496,8 @@
                 }
             });
 
-            accommodationDurationSelect.addEventListener('change', function() {
-                // Get the region dropdown
-                const regionSelect = document.getElementById('region_id');
-
-                // Update Christmas visibility based on new duration
-                updateChristmasSectionVisibility();
-
-                // Only auto-calculate if we have all required fields
-                if (regionSelect.value && courseSelect.value && courseDurationSelect.value && startDateInput.value) {
-                    autoCalculate();
-                }
-            });
+            // This is a duplicate event listener that was causing issues
+            // The main event listener is defined above
 
             document.getElementById('courier_fee_option').addEventListener('change', function() {
                 // Get the region dropdown
@@ -2287,6 +2983,198 @@
             // Function to update the Christmas extra weeks dropdown (REMOVED - handled by populateChristmasExtraWeeks and visibility update)
             // function updateChristmasExtraWeeksDropdown() { ... }
 
+            // Function to populate additional course duration dropdown
+            function populateAdditionalCourseDurationDropdown() {
+                console.log('Populating additional course duration dropdown');
+                // Clear existing options
+                additionalCourseDurationSelect.innerHTML = '<option value="">-- Select Course Duration --</option>';
+
+                // Get the selected course
+                const selectedCourseId = additionalCourseSelect.value;
+                let maxWeeks = 52; // Default max if no limit or no prices
+                let minWeeks = 1; // Default min
+
+                // Populate dropdown options
+                for (let i = minWeeks; i <= maxWeeks; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `${i} week${i > 1 ? 's' : ''}`;
+                    additionalCourseDurationSelect.appendChild(option);
+                }
+
+                // Auto-select the first option
+                if (selectedCourseId && additionalCourseDurationSelect.options.length > 1) {
+                    additionalCourseDurationSelect.selectedIndex = 1; // Select the first week option
+                    // Trigger change event to update calculations
+                    additionalCourseDurationSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
+            // Function to populate additional accommodation duration dropdown
+            function populateAdditionalAccommodationDurationDropdown(forceCourseDuration = false) {
+                console.log('Populating additional accommodation duration dropdown' + (forceCourseDuration ? ' (forcing course duration)' : ''));
+                // Clear existing options
+                additionalAccommodationDurationSelect.innerHTML = '<option value="">-- Select Accommodation Duration --</option>';
+
+                // Get the selected additional course duration
+                const additionalCourseDuration = parseInt(additionalCourseDurationSelect.value) || 0;
+                // Get the main course duration as fallback
+                const mainCourseDuration = parseInt(courseDurationSelect.value) || 0;
+
+                // Calculate total course duration budget
+                const totalCourseBudget = calculateTotalCourseDurationBudget();
+
+                // Get the current main accommodation duration
+                const mainAccommodationDuration = parseInt(accommodationDurationSelect.value) || 0;
+                const mainAccommodationSelected = accommodationSelect.value;
+
+                // Use additional course duration if available, otherwise use main course duration
+                let effectiveCourseDuration = additionalCourseDuration > 0 ? additionalCourseDuration : mainCourseDuration;
+
+                // Calculate the maximum allowed for this dropdown
+                let maxAccommodationWeeks;
+
+                if (effectiveCourseDuration > 0) {
+                    if (mainAccommodationSelected && mainAccommodationDuration > 0) {
+                        // If main accommodation is selected, limit additional accommodation to total budget minus main accommodation
+                        const remainingBudget = totalCourseBudget - mainAccommodationDuration;
+                        maxAccommodationWeeks = Math.min(effectiveCourseDuration, Math.max(0, remainingBudget));
+                        console.log('Main accommodation selected with', mainAccommodationDuration, 'weeks. Limiting additional accommodation to', maxAccommodationWeeks, 'weeks');
+                    } else {
+                        // If no main accommodation, limit to effective course duration
+                        maxAccommodationWeeks = effectiveCourseDuration;
+                    }
+                } else {
+                    maxAccommodationWeeks = 52; // Default maximum of 52 weeks (1 year)
+                }
+
+                // Always ensure we have at least one option if there's any budget left
+                // This is critical for when main accommodation duration is reduced
+                if (totalCourseBudget > mainAccommodationDuration) {
+                    // Ensure at least 1 week is available
+                    maxAccommodationWeeks = Math.max(1, maxAccommodationWeeks);
+                    console.log('Ensuring at least 1 week is available for additional accommodation');
+                }
+
+                console.log('Using effective course duration for additional accommodation:', effectiveCourseDuration);
+                console.log('Max additional accommodation weeks:', maxAccommodationWeeks);
+
+                // If no course duration or it's invalid, set a reasonable default
+                if (!maxAccommodationWeeks || maxAccommodationWeeks <= 0) {
+                    maxAccommodationWeeks = 52; // Default maximum of 52 weeks (1 year)
+                    console.log('No valid course duration or no remaining budget. Using default max: ' + maxAccommodationWeeks);
+                }
+
+                // Get the current selected value if any
+                const currentValue = additionalAccommodationDurationSelect.value;
+                console.log('Current additional accommodation weeks value: ' + currentValue);
+                let valueSelected = false;
+
+                // Store the current value for later use
+                const storedValue = currentValue;
+
+                // Mark if the current value exceeds the course duration or if we should force course duration
+                let currentValueExceedsCourse = forceCourseDuration;
+
+                // Populate dropdown options
+                for (let i = 1; i <= maxAccommodationWeeks; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+
+                    // Disable options that exceed course duration if course is selected
+                    if (effectiveCourseDuration > 0 && i > effectiveCourseDuration) {
+                        option.disabled = true;
+                        option.textContent = `${i} week${i > 1 ? 's' : ''} (exceeds course duration)`;
+                    } else {
+                        option.textContent = `${i} week${i > 1 ? 's' : ''}`;
+                    }
+
+                    // If this option matches the effective course duration, mark it for potential selection
+                    if (effectiveCourseDuration > 0 && i === effectiveCourseDuration) {
+                        option.setAttribute('data-course-duration-match', 'true');
+                    }
+
+                    // Try to select the current value if it matches and is valid
+                    // Only do this if we're not forcing course duration
+                    if (!forceCourseDuration && currentValue && parseInt(currentValue) === i) {
+                        // Only select if it doesn't exceed course duration
+                        if (!(effectiveCourseDuration > 0 && i > effectiveCourseDuration)) {
+                            option.selected = true;
+                            valueSelected = true;
+                            console.log('Selected option with value:', i);
+                        } else {
+                            console.log('Cannot select option with value:', i, 'as it exceeds course duration');
+                        }
+                    }
+
+                    additionalAccommodationDurationSelect.appendChild(option);
+                }
+
+                console.log('Additional accommodation weeks dropdown populated with ' + maxAccommodationWeeks + ' options');
+
+                // If forcing course duration, or the current value exceeds the course duration, select the course duration
+                if ((forceCourseDuration || (effectiveCourseDuration > 0 && parseInt(currentValue) > effectiveCourseDuration))) {
+                    console.log('Forcing course duration or current value exceeds course duration, selecting course duration instead');
+                    // Only reset valueSelected if we're forcing course duration
+                    if (forceCourseDuration) {
+                        valueSelected = false; // Force selection of course duration
+                    }
+                }
+
+                // If forcing course duration and we have options, select the course duration (or first option if no course duration)
+                if (forceCourseDuration && additionalAccommodationDurationSelect.options.length > 1) {
+                    if (effectiveCourseDuration > 0) {
+                        // Find the option that matches the course duration
+                        let courseDurationOptionFound = false;
+                        for (let i = 0; i < additionalAccommodationDurationSelect.options.length; i++) {
+                            const option = additionalAccommodationDurationSelect.options[i];
+                            if (option.getAttribute('data-course-duration-match') === 'true') {
+                                additionalAccommodationDurationSelect.selectedIndex = i;
+                                console.log('Auto-selected additional accommodation duration to match course duration:', effectiveCourseDuration);
+                                valueSelected = true;
+                                courseDurationOptionFound = true;
+                                break;
+                            }
+                        }
+
+                        // If no matching option was found, select the first option
+                        if (!courseDurationOptionFound) {
+                            additionalAccommodationDurationSelect.selectedIndex = 1; // Select the first week option
+                            console.log('No matching option for course duration, selected first option');
+                        }
+                    } else {
+                        additionalAccommodationDurationSelect.selectedIndex = 1; // Select the first week option
+                        console.log('No course duration set, selected first additional accommodation duration option');
+                    }
+                }
+
+                // If we have a stored value and it wasn't selected during the loop, try to select it now
+                if (storedValue && !valueSelected && !forceCourseDuration) {
+                    // Find the option with the stored value
+                    for (let i = 0; i < additionalAccommodationDurationSelect.options.length; i++) {
+                        const option = additionalAccommodationDurationSelect.options[i];
+                        if (option.value === storedValue && !option.disabled) {
+                            additionalAccommodationDurationSelect.selectedIndex = i;
+                            valueSelected = true;
+                            console.log('Selected stored value:', storedValue);
+                            break;
+                        }
+                    }
+                }
+
+                // Only trigger change event if we actually changed the value
+                // This prevents potential infinite loops
+                if (valueSelected) {
+                    // Use a flag to prevent infinite loops
+                    const preventLoop = true;
+                    // Create a custom event with data
+                    const customEvent = new CustomEvent('change', { detail: { preventLoop } });
+                    additionalAccommodationDurationSelect.dispatchEvent(customEvent);
+                }
+
+                return valueSelected;
+            }
+
             // --- Function to Render Results from JSON ---
             function renderResults(costBreakdown) {
                 if (!resultsContainer) {
@@ -2336,46 +3224,118 @@
                     html += `</ul></div>`;
                 }
 
-                // Course Section
-                let courseTuition = 0;
-                let courseName = costBreakdown.course_name || 'Course details missing';
-                let courseDuration = costBreakdown.course_duration_weeks || 'N/A';
+                // Courses Section
+                let courseItems = [];
                 costBreakdown.items.forEach(item => {
                     if (item.category === 'tuition') {
-                        courseTuition = item.amount;
-                        courseName = item.name; // Use name from item if available
+                        courseItems.push(item);
                     }
                 });
 
                 html += `<div class="mb-6">
-                            <h4 class="font-semibold text-bayswater-blue mb-2">Course</h4>
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-sm">${courseName}</span>
-                                <span class="font-semibold">${formatCurrency(courseTuition)}</span>
-                            </div>
-                            <div class="text-sm text-gray-600 mt-2">
-                                <p><strong>Start date:</strong> ${formatDateDisplay(costBreakdown.course_start_date)}</p>
-                                <p><strong>Duration:</strong> ${courseDuration} weeks</p>
-                            </div>
-                         </div>`;
+                            <h4 class="font-semibold text-bayswater-blue mb-2">Courses</h4>`;
+
+                if (courseItems.length > 0) {
+                    courseItems.forEach((courseItem, index) => {
+                        html += `<div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm">${courseItem.name}</span>
+                                    <span class="font-semibold">${formatCurrency(courseItem.amount)}</span>
+                                </div>
+                                <div class="text-sm text-gray-600 mt-2 mb-4">`;
+
+                        // Get course details from the courses array if available
+                        if (costBreakdown.courses && costBreakdown.courses[index]) {
+                            html += `<p><strong>Start date:</strong> ${formatDateDisplay(costBreakdown.courses[index].start_date)}</p>
+                                    <p><strong>End date:</strong> ${formatDateDisplay(costBreakdown.courses[index].end_date)}</p>
+                                    <p><strong>Duration:</strong> ${costBreakdown.courses[index].duration_weeks} weeks</p>`;
+                        } else if (index === 0 && costBreakdown.course_start_date) {
+                            // Fallback for the first course if courses array is not available
+                            html += `<p><strong>Start date:</strong> ${formatDateDisplay(costBreakdown.course_start_date)}</p>
+                                    <p><strong>End date:</strong> ${costBreakdown.course_end_date ? formatDateDisplay(costBreakdown.course_end_date) : 'N/A'}</p>
+                                    <p><strong>Duration:</strong> ${costBreakdown.course_duration_weeks || 'N/A'} weeks</p>`;
+                        } else {
+                            html += `<p><strong>Start date:</strong> N/A</p>
+                                    <p><strong>End date:</strong> N/A</p>
+                                    <p><strong>Duration:</strong> N/A weeks</p>`;
+                        }
+
+                        html += `</div>`;
+
+                        // Add a separator between courses
+                        if (index < courseItems.length - 1) {
+                            html += `<hr class="my-2">`;
+                        }
+                    });
+                } else {
+                    html += `<div class="text-sm text-gray-600">
+                                <p>No course selected</p>
+                            </div>`;
+                }
+
+                html += `</div>`;
 
                 // Accommodation Section
                 let accommodationTotal = costBreakdown.subtotals?.accommodation || 0;
-                let accommodationName = '';
+                let accommodationItems = [];
                 costBreakdown.items.forEach(item => {
                     if (item.category === 'accommodation' && !item.name.includes('Fee')) { // Exclude placement fee
-                        accommodationName = item.name;
+                        accommodationItems.push(item);
                     }
                 });
 
-                if (accommodationTotal > 0 || accommodationName) { // Show section if there's a cost or a name
+                if (accommodationTotal > 0 || accommodationItems.length > 0) { // Show section if there's a cost or items
                     html += `<div class="mb-6">
-                                <h4 class="font-semibold text-bayswater-blue mb-2">Accommodation</h4>
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm">${accommodationName || 'Accommodation'}</span>
+                                <h4 class="font-semibold text-bayswater-blue mb-2">Accommodation</h4>`;
+
+                    if (accommodationItems.length > 0) {
+                        accommodationItems.forEach((accommodationItem, index) => {
+                            html += `<div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm">${accommodationItem.name}</span>
+                                        <span class="font-semibold">${formatCurrency(accommodationItem.amount)}</span>
+                                    </div>
+                                    <div class="text-sm text-gray-600 mt-2 mb-4">`;
+
+                            // Get accommodation details from the accommodations array if available
+                            if (costBreakdown.accommodations && costBreakdown.accommodations[index]) {
+                                html += `<p><strong>Duration:</strong> ${costBreakdown.accommodations[index].duration_weeks} weeks</p>`;
+                            } else if (index === 0 && costBreakdown.accommodation_duration_weeks) {
+                                // Fallback for the first accommodation if accommodations array is not available
+                                html += `<p><strong>Duration:</strong> ${costBreakdown.accommodation_duration_weeks || 'N/A'} weeks</p>`;
+                            } else {
+                                // If we have a single accommodation but multiple courses, use the first accommodation's duration
+                                if (costBreakdown.accommodations && costBreakdown.accommodations[0]) {
+                                    html += `<p><strong>Duration:</strong> ${costBreakdown.accommodations[0].duration_weeks} weeks</p>`;
+                                } else {
+                                    html += `<p><strong>Duration:</strong> N/A weeks</p>`;
+                                }
+                            }
+
+                            html += `</div>`;
+
+                            // Add a separator between accommodations
+                            if (index < accommodationItems.length - 1) {
+                                html += `<hr class="my-2">`;
+                            }
+                        });
+                    } else {
+                        html += `<div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm">Accommodation</span>
                                     <span class="font-semibold">${formatCurrency(accommodationTotal)}</span>
-                                </div>
-                             </div>`;
+                                </div>`;
+
+                        // Add accommodation duration even when no items are displayed
+                        if (costBreakdown.accommodations && costBreakdown.accommodations[0]) {
+                            html += `<div class="text-sm text-gray-600 mt-2 mb-4">
+                                        <p><strong>Duration:</strong> ${costBreakdown.accommodations[0].duration_weeks} weeks</p>
+                                    </div>`;
+                        } else if (costBreakdown.accommodation_duration_weeks) {
+                            html += `<div class="text-sm text-gray-600 mt-2 mb-4">
+                                        <p><strong>Duration:</strong> ${costBreakdown.accommodation_duration_weeks} weeks</p>
+                                    </div>`;
+                        }
+                    }
+
+                    html += `</div>`;
                 }
 
                 // Sub Total (Course + Accommodation)
@@ -2427,15 +3387,64 @@
                 if (costBreakdown.discounts && costBreakdown.discounts.length > 0) {
                     html += `<div class="mt-6 mb-6">
                                 <h4 class="font-semibold text-bayswater-blue mb-2">Discounts Applied</h4>`;
+
+                    // Group discounts by what they apply to
+                    let courseDiscounts = [];
+                    let accommodationDiscounts = [];
+                    let otherDiscounts = [];
+
                     costBreakdown.discounts.forEach(discount => {
-                        // Only display if amount > 0 (waivers are handled implicitly by fee not being added or shown)
+                        // Only process if amount > 0 (waivers are handled implicitly by fee not being added or shown)
                         if (discount.amount > 0) {
-                             html += `<div class="flex justify-between items-center mb-1 text-green-600">
-                                         <span class="text-sm">${discount.name}</span>
-                                         <span class="font-semibold">-${formatCurrency(discount.amount)}</span>
-                                      </div>`;
+                            if (discount.applied_to === 'course_tuition') {
+                                courseDiscounts.push(discount);
+                            } else if (discount.applied_to === 'accommodation_price') {
+                                accommodationDiscounts.push(discount);
+                            } else {
+                                otherDiscounts.push(discount);
+                            }
                         }
                     });
+
+                    // Display course discounts
+                    if (courseDiscounts.length > 0) {
+                        html += `<div class="mb-3">
+                                    <h5 class="text-sm font-medium mb-1">Course Discounts:</h5>`;
+                        courseDiscounts.forEach(discount => {
+                            html += `<div class="flex justify-between items-center mb-1 text-green-600 pl-2">
+                                        <span class="text-sm">${discount.name}</span>
+                                        <span class="font-semibold">-${formatCurrency(discount.amount)}</span>
+                                    </div>`;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // Display accommodation discounts
+                    if (accommodationDiscounts.length > 0) {
+                        html += `<div class="mb-3">
+                                    <h5 class="text-sm font-medium mb-1">Accommodation Discounts:</h5>`;
+                        accommodationDiscounts.forEach(discount => {
+                            html += `<div class="flex justify-between items-center mb-1 text-green-600 pl-2">
+                                        <span class="text-sm">${discount.name}</span>
+                                        <span class="font-semibold">-${formatCurrency(discount.amount)}</span>
+                                    </div>`;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // Display other discounts
+                    if (otherDiscounts.length > 0) {
+                        html += `<div class="mb-3">
+                                    <h5 class="text-sm font-medium mb-1">Other Discounts:</h5>`;
+                        otherDiscounts.forEach(discount => {
+                            html += `<div class="flex justify-between items-center mb-1 text-green-600 pl-2">
+                                        <span class="text-sm">${discount.name}</span>
+                                        <span class="font-semibold">-${formatCurrency(discount.amount)}</span>
+                                    </div>`;
+                        });
+                        html += `</div>`;
+                    }
+
                     html += `</div>`;
                 }
 

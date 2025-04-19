@@ -104,13 +104,13 @@
                              {{-- Summer Start Date --}}
                              <div>
                                  <x-input-label for="summer_start_date" :value="__('Summer Supplement Start Date')" />
-                                 <x-text-input id="summer_start_date" class="block mt-1 w-full" type="date" name="summer_start_date" :value="old('summer_start_date', $accommodation->summer_start_date)" />
+                                 <x-text-input id="summer_start_date" class="block mt-1 w-full" type="date" name="summer_start_date" :value="old('summer_start_date', $accommodation->summer_start_date ? $accommodation->summer_start_date->format('Y-m-d') : '')" />
                                  <x-input-error :messages="$errors->get('summer_start_date')" class="mt-2" />
                              </div>
                              {{-- Summer End Date --}}
                              <div>
                                  <x-input-label for="summer_end_date" :value="__('Summer Supplement End Date')" />
-                                 <x-text-input id="summer_end_date" class="block mt-1 w-full" type="date" name="summer_end_date" :value="old('summer_end_date', $accommodation->summer_end_date)" />
+                                 <x-text-input id="summer_end_date" class="block mt-1 w-full" type="date" name="summer_end_date" :value="old('summer_end_date', $accommodation->summer_end_date ? $accommodation->summer_end_date->format('Y-m-d') : '')" />
                                  <x-input-error :messages="$errors->get('summer_end_date')" class="mt-2" />
                              </div>
                              {{-- Summer Fee Note --}}

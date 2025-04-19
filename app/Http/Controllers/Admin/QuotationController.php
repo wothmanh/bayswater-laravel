@@ -118,6 +118,17 @@ class QuotationController extends Controller
                      'selected_addons.*' => 'sometimes|boolean', // Basic check, might need more complex validation if addons have quantities/options
                      'arrival_transfer_airport_id' => 'nullable|exists:airports,id', // Validate arrival airport
                      'departure_transfer_airport_id' => 'nullable|exists:airports,id', // Validate departure airport
+                     // Additional course and accommodation
+                     'additional_course_id' => 'nullable|exists:courses,id',
+                     'additional_course_start_date' => 'nullable|required_with:additional_course_id|date|date_format:Y-m-d',
+                     'additional_course_duration_weeks' => 'nullable|required_with:additional_course_id|integer|min:1',
+                     'additional_accommodation_id' => 'nullable|exists:accommodations,id',
+                     'additional_accommodation_duration_weeks' => [
+                         'nullable',
+                         'required_with:additional_accommodation_id',
+                         'integer',
+                         'min:1',
+                     ],
                      // Add validation for addon details if they have quantities, etc.
                  ]);
              }
@@ -138,6 +149,82 @@ class QuotationController extends Controller
          // Ensure accommodation duration is null if accommodation_id is null
          if (empty($validatedData['accommodation_id'])) {
              $quoteParams['accommodation_duration_weeks'] = null;
+         }
+
+         // Handle additional course if provided
+         if (!empty($validatedData['additional_course_id'])) {
+             // Convert to the format expected by the service
+             $quoteParams['courses'] = [
+                 [
+                     'course_id' => $validatedData['course_id'],
+                     'start_date' => $validatedData['course_start_date'],
+                     'duration_weeks' => $validatedData['course_duration_weeks']
+                 ],
+                 [
+                     'course_id' => $validatedData['additional_course_id'],
+                     'start_date' => $validatedData['additional_course_start_date'],
+                     'duration_weeks' => $validatedData['additional_course_duration_weeks']
+                 ]
+             ];
+
+             // Calculate end dates for each course
+             foreach ($quoteParams['courses'] as $index => $course) {
+                 // Calculate course end date (Friday of the last week)
+                 // Start with Monday of the first week, add (duration-1) weeks to get to the Monday of the last week
+                 // Then add 4 days to get to Friday of the last week
+                 $startDate = \Carbon\Carbon::parse($course['start_date']);
+                 $endDate = $startDate->copy()->addWeeks($course['duration_weeks'] - 1)->addDays(4);
+                 $quoteParams['courses'][$index]['end_date'] = $endDate->format('Y-m-d');
+             }
+         }
+
+         // Handle accommodations
+         // If there's at least one accommodation, always use the accommodations array format
+         if (!empty($validatedData['accommodation_id'])) {
+             // Initialize the accommodations array with the first accommodation
+             $quoteParams['accommodations'] = [
+                 [
+                     'accommodation_id' => $validatedData['accommodation_id'],
+                     'duration_weeks' => $validatedData['accommodation_duration_weeks']
+                 ]
+             ];
+
+             // Add additional accommodation if provided
+             if (!empty($validatedData['additional_accommodation_id'])) {
+                 $quoteParams['accommodations'][] = [
+                     'accommodation_id' => $validatedData['additional_accommodation_id'],
+                     'duration_weeks' => $validatedData['additional_accommodation_duration_weeks']
+                 ];
+             }
+
+             // If we're using the accommodations array format but not the courses array format,
+             // we need to ensure the course information is also in the correct format for the service
+             if (empty($quoteParams['courses']) && !empty($validatedData['course_id'])) {
+                 $quoteParams['courses'] = [
+                     [
+                         'course_id' => $validatedData['course_id'],
+                         'start_date' => $validatedData['course_start_date'],
+                         'duration_weeks' => $validatedData['course_duration_weeks']
+                     ]
+                 ];
+
+                 // Calculate end date for the course
+                 $startDate = \Carbon\Carbon::parse($validatedData['course_start_date']);
+                 $endDate = $startDate->copy()->addWeeks($validatedData['course_duration_weeks'] - 1)->addDays(4);
+                 $quoteParams['courses'][0]['end_date'] = $endDate->format('Y-m-d');
+             }
+
+             // Always include the course_start_date in the quote params for backward compatibility
+             // This is needed for the accommodation start date calculation in the single course case
+             if (!empty($validatedData['course_start_date'])) {
+                 $quoteParams['course_start_date'] = $validatedData['course_start_date'];
+             }
+         }
+
+         // Always include the course_start_date in the quote params for backward compatibility
+         // This is needed for the accommodation start date calculation in the single course case
+         if (empty($quoteParams['course_start_date']) && !empty($validatedData['course_start_date'])) {
+             $quoteParams['course_start_date'] = $validatedData['course_start_date'];
          }
 
          // Get the school to check for extra accommodation weeks
@@ -204,10 +291,27 @@ class QuotationController extends Controller
          // --- 3. Call the Fee Calculator Service ---
          try {
              Log::info('Calculating quote with params:', $quoteParams);
-             $costBreakdown = $calculator->calculateQuote($quoteParams);
+
+             // Use split quote calculation if additional course or accommodation is provided
+             if (!empty($quoteParams['courses']) || !empty($quoteParams['accommodations'])) {
+                 $costBreakdown = $calculator->calculateSplitQuote($quoteParams);
+             } else {
+                 $costBreakdown = $calculator->calculateQuote($quoteParams);
+             }
 
              // Add course start date to the cost breakdown for display
-             $costBreakdown['course_start_date'] = $validatedData['course_start_date'];
+             if (isset($validatedData['course_start_date'])) {
+                 $costBreakdown['course_start_date'] = $validatedData['course_start_date'];
+             }
+
+             // Add courses and accommodations data to the cost breakdown for display
+             if (!empty($quoteParams['courses'])) {
+                 $costBreakdown['courses'] = $quoteParams['courses'];
+             }
+
+             if (!empty($quoteParams['accommodations'])) {
+                 $costBreakdown['accommodations'] = $quoteParams['accommodations'];
+             }
 
              Log::info('Calculation result:', $costBreakdown);
 

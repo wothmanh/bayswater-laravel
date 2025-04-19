@@ -90,6 +90,14 @@
         .discount {
             color: #28a745;
         }
+        .subsection-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: #003366;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            padding-left: 10px;
+        }
         .notes {
             margin-bottom: 20px;
         }
@@ -134,44 +142,121 @@
 
         <h2>Your Quote</h2>
 
-        <!-- Course Section -->
-        <div class="section-title">Course</div>
-        @php
-            $courseTuition = 0;
-            $courseName = '';
-            foreach ($costBreakdown['items'] as $item) {
-                if ($item['category'] === 'tuition') {
-                    $courseTuition = $item['amount'];
-                    $courseName = $item['name'];
-                    break;
+        <!-- Courses Section -->
+        <div class="section-title">Courses</div>
+
+        @if(!empty($costBreakdown['courses']))
+            @foreach($costBreakdown['courses'] as $index => $course)
+                <div class="item">
+                    <div class="item-name">{{ $course['course_name'] }}</div>
+                    <div class="item-price">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($course['fee'], 2) }}</div>
+                </div>
+                <div class="item-details">
+                    {{ $costBreakdown['school_name'] }}, {{ $costBreakdown['city_name'] }} - {{ $course['duration_weeks'] }} weeks<br>
+                    <strong>Start date:</strong> {{ \Carbon\Carbon::parse($course['start_date'])->format('d M Y') }}<br>
+                    <strong>End date:</strong> {{ \Carbon\Carbon::parse($course['end_date'])->format('d M Y') }}
+                </div>
+            @endforeach
+            <div class="subtotal">
+                <div>Course Subtotal</div>
+                <div>{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($costBreakdown['subtotals']['tuition'], 2) }}</div>
+            </div>
+        @else
+            @php
+                $courseItems = [];
+                foreach ($costBreakdown['items'] as $item) {
+                    if ($item['category'] === 'tuition') {
+                        $courseItems[] = $item;
+                    }
                 }
-            }
-        @endphp
-        <div class="item">
-            <div class="item-name">{{ $courseName }}</div>
-            <div class="item-price">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($courseTuition, 2) }}</div>
-        </div>
-        <div class="item-details">
-            {{ $costBreakdown['school_name'] }}, {{ $costBreakdown['city_name'] }} - {{ $costBreakdown['course_duration_weeks'] }} weeks<br>
-            <strong>Start date:</strong> {{ \Carbon\Carbon::parse($costBreakdown['course_start_date'])->format('d M Y') }}
-        </div>
+            @endphp
+
+            @if(count($courseItems) > 0)
+                @foreach($courseItems as $index => $courseItem)
+                    <div class="item">
+                        <div class="item-name">{{ $courseItem['name'] }}</div>
+                        <div class="item-price">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($courseItem['amount'], 2) }}</div>
+                    </div>
+                    <div class="item-details">
+                        {{ $costBreakdown['school_name'] }}, {{ $costBreakdown['city_name'] }}
+                        @if(isset($costBreakdown['course_start_date']))
+                            - {{ $costBreakdown['course_duration_weeks'] ?? 'N/A' }} weeks<br>
+                            <strong>Start date:</strong> {{ \Carbon\Carbon::parse($costBreakdown['course_start_date'])->format('d M Y') }}<br>
+                            <strong>End date:</strong> {{ isset($costBreakdown['course_end_date']) ? \Carbon\Carbon::parse($costBreakdown['course_end_date'])->format('d M Y') : 'N/A' }}
+                        @else
+                            - Duration: N/A<br>
+                            <strong>Start date:</strong> N/A<br>
+                            <strong>End date:</strong> N/A
+                        @endif
+                    </div>
+                @endforeach
+                <div class="subtotal">
+                    <div>Course Subtotal</div>
+                    <div>{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($costBreakdown['subtotals']['tuition'], 2) }}</div>
+                </div>
+            @else
+                <div class="item">
+                    <div class="item-name">No course selected</div>
+                    <div class="item-price">{{ $costBreakdown['currency_symbol'] ?? '' }}0.00</div>
+                </div>
+            @endif
+        @endif
 
         <!-- Accommodation Section -->
         @php
             $accommodationTotal = $costBreakdown['subtotals']['accommodation'] ?? 0;
-            $accommodationName = '';
-            foreach ($costBreakdown['items'] as $item) {
-                if ($item['category'] === 'accommodation' && !str_contains($item['name'], 'Fee')) {
-                    $accommodationName = $item['name'];
-                    break;
-                }
-            }
         @endphp
         @if($accommodationTotal > 0)
         <div class="section-title">Accommodation</div>
-        <div class="item">
-            <div class="item-name">{{ $accommodationName }}</div>
-            <div class="item-price">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($accommodationTotal, 2) }}</div>
+
+        @if(!empty($costBreakdown['accommodations']))
+            @foreach($costBreakdown['accommodations'] as $index => $accommodation)
+                <div class="item">
+                    <div class="item-name">{{ $accommodation['accommodation_name'] }}</div>
+                    <div class="item-price">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($accommodation['fee'], 2) }}</div>
+                </div>
+                <div class="item-details">
+                    <strong>Duration:</strong> {{ $accommodation['duration_weeks'] }} weeks
+                </div>
+            @endforeach
+        @else
+            @php
+                $accommodationItems = [];
+                foreach ($costBreakdown['items'] as $item) {
+                    if ($item['category'] === 'accommodation' && !str_contains($item['name'], 'Fee')) {
+                        $accommodationItems[] = $item;
+                    }
+                }
+            @endphp
+            @foreach($accommodationItems as $index => $accommodationItem)
+                <div class="item">
+                    <div class="item-name">{{ $accommodationItem['name'] }}</div>
+                    <div class="item-price">{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($accommodationItem['amount'], 2) }}</div>
+                </div>
+                <div class="item-details">
+                    @if(isset($costBreakdown['accommodation_duration_weeks']))
+                        <strong>Duration:</strong> {{ $costBreakdown['accommodation_duration_weeks'] }} weeks
+                    @else
+                        <strong>Duration:</strong> N/A weeks
+                    @endif
+                </div>
+            @endforeach
+        @endif
+
+        <div class="subtotal">
+            <div>Accommodation Subtotal</div>
+            <div>{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($costBreakdown['subtotals']['accommodation'], 2) }}</div>
+        </div>
+        @endif
+
+        <!-- Course + Accommodation Subtotal -->
+        @php
+            $courseAccommodationTotal = ($costBreakdown['subtotals']['tuition'] ?? 0) + ($costBreakdown['subtotals']['accommodation'] ?? 0);
+        @endphp
+        @if($courseAccommodationTotal > 0)
+        <div class="subtotal" style="border-top: 2px solid #003366; margin-top: 20px;">
+            <div>Sub Total</div>
+            <div>{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($courseAccommodationTotal, 2) }}</div>
         </div>
         @endif
 
@@ -198,13 +283,55 @@
 
         <!-- Discounts Section -->
         @if (!empty($costBreakdown['discounts']))
-        <div class="section-title">Discounts</div>
-        @foreach ($costBreakdown['discounts'] as $discount)
-        <div class="item discount">
-            <div class="item-name">{{ $discount['name'] }}</div>
-            <div class="item-price">-{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($discount['amount'], 2) }}</div>
-        </div>
-        @endforeach
+        <div class="section-title">Discounts Applied</div>
+
+        @php
+            $courseDiscounts = [];
+            $accommodationDiscounts = [];
+            $otherDiscounts = [];
+
+            foreach ($costBreakdown['discounts'] as $discount) {
+                if ($discount['amount'] > 0) {
+                    if ($discount['applied_to'] === 'course_tuition') {
+                        $courseDiscounts[] = $discount;
+                    } elseif ($discount['applied_to'] === 'accommodation_price') {
+                        $accommodationDiscounts[] = $discount;
+                    } else {
+                        $otherDiscounts[] = $discount;
+                    }
+                }
+            }
+        @endphp
+
+        @if(count($courseDiscounts) > 0)
+            <div class="subsection-title">Course Discounts:</div>
+            @foreach($courseDiscounts as $discount)
+                <div class="item discount">
+                    <div class="item-name">{{ $discount['name'] }}</div>
+                    <div class="item-price">-{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($discount['amount'], 2) }}</div>
+                </div>
+            @endforeach
+        @endif
+
+        @if(count($accommodationDiscounts) > 0)
+            <div class="subsection-title">Accommodation Discounts:</div>
+            @foreach($accommodationDiscounts as $discount)
+                <div class="item discount">
+                    <div class="item-name">{{ $discount['name'] }}</div>
+                    <div class="item-price">-{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($discount['amount'], 2) }}</div>
+                </div>
+            @endforeach
+        @endif
+
+        @if(count($otherDiscounts) > 0)
+            <div class="subsection-title">Other Discounts:</div>
+            @foreach($otherDiscounts as $discount)
+                <div class="item discount">
+                    <div class="item-name">{{ $discount['name'] }}</div>
+                    <div class="item-price">-{{ $costBreakdown['currency_symbol'] ?? '' }}{{ number_format($discount['amount'], 2) }}</div>
+                </div>
+            @endforeach
+        @endif
         @endif
 
         <!-- Notes Section -->

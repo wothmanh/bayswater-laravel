@@ -90,6 +90,19 @@ class FeeCalculatorService
             // Add course start date here as well, as it's used in display
             $this->costBreakdown['course_start_date'] = $this->startDate ? $this->startDate->format('Y-m-d') : null;
 
+            // Calculate and add course end date (Friday of the last week)
+            if ($this->startDate && $this->courseWeeks) {
+                // Start with Monday of the first week, add (duration-1) weeks to get to the Monday of the last week
+                // Then add 4 days to get to Friday of the last week
+                $endDate = $this->startDate->copy()->addWeeks($this->courseWeeks - 1)->addDays(4);
+                $this->costBreakdown['course_end_date'] = $endDate->format('Y-m-d');
+            }
+
+            // Add accommodation duration weeks if accommodation is selected
+            if ($this->accommodation && $this->accommodationWeeks) {
+                $this->costBreakdown['accommodation_duration_weeks'] = $this->accommodationWeeks;
+            }
+
 
             return $this->costBreakdown;
         } catch (\Exception $e) {
@@ -597,6 +610,9 @@ class FeeCalculatorService
     /**
      * Apply relevant discounts based on the calculated items and quote details.
      */
+    /**
+     * Apply relevant discounts based on the calculated items and quote details.
+     */
     private function applyDiscounts(): void
     {
         // Fetch potentially applicable discount rules (active, global or for the specific school)
@@ -623,23 +639,13 @@ class FeeCalculatorService
                     continue; // Skip if a non-combinable discount already applied to this category
                 }
 
+                // Calculate and apply the discount
+                // The calculateDiscountAmount method now handles adding the discount to the breakdown
                 $discountAmount = $this->calculateDiscountAmount($rule);
 
-                if ($discountAmount > 0) {
-                    $this->addDiscount($rule->name, $discountAmount, $rule->applies_to);
-
-                    // Mark this category as having a non-combinable discount applied
-                    if (!$rule->combinable) {
-                        $appliedDiscounts[$appliesToCategory] = true;
-                    }
-                } elseif ($rule->discount_type === 'fee_waiver') {
-                    // Handle fee waiver specifically (amount is 0, but we mark it)
-                     $this->addDiscount($rule->name, 0, $rule->applies_to . '_waiver'); // Mark as waiver
-                     if (!$rule->combinable) {
-                         $appliedDiscounts[$appliesToCategory] = true;
-                     }
-                     // Note: Actual fee removal might need adjustment in calculateSchoolFees or other methods
-                     // Or adjust total calculation to consider waivers. Simpler for now to just list it.
+                // Mark this category as having a non-combinable discount applied if needed
+                if ($discountAmount > 0 && !$rule->combinable) {
+                    $appliedDiscounts[$appliesToCategory] = true;
                 }
             }
         }
@@ -737,8 +743,23 @@ class FeeCalculatorService
      * @param DiscountRule $rule
      * @return float
      */
+    /**
+     * Calculate the discount amount based on the rule type and value.
+     * For split quotes, this will apply the discount to each applicable item and add them separately.
+     *
+     * @param DiscountRule $rule The discount rule to apply
+     * @return float The total discount amount
+     */
     private function calculateDiscountAmount(DiscountRule $rule): float
     {
+        // For course_tuition and accommodation_price in split quotes, we need to apply discounts per item
+        if (($rule->applies_to === 'course_tuition' || $rule->applies_to === 'accommodation_price') &&
+            !empty($this->costBreakdown['courses']) || !empty($this->costBreakdown['accommodations'])) {
+
+            return $this->calculateSplitDiscountAmount($rule);
+        }
+
+        // For other discount types, use the original calculation
         $baseAmount = 0;
 
         switch ($rule->applies_to) {
@@ -788,12 +809,17 @@ class FeeCalculatorService
 
         // Calculate discount
         if ($rule->discount_type === 'percentage') {
-            return ($baseAmount * $rule->discount_value) / 100;
+            $discountAmount = ($baseAmount * $rule->discount_value) / 100;
+            $this->addDiscount($rule->name, $discountAmount, $rule->applies_to);
+            return $discountAmount;
         } elseif ($rule->discount_type === 'fixed_amount') {
             // Ensure fixed amount doesn't exceed the base amount
-            return min($baseAmount, $rule->discount_value);
+            $discountAmount = min($baseAmount, $rule->discount_value);
+            $this->addDiscount($rule->name, $discountAmount, $rule->applies_to);
+            return $discountAmount;
         } elseif ($rule->discount_type === 'fee_waiver') {
              // Return the full base amount for waiver, handled by addDiscount
+             $this->addDiscount($rule->name, $baseAmount, $rule->applies_to . '_waiver');
              return $baseAmount;
         } elseif ($rule->discount_type === 'fixed_amount_per_week') {
             // This type requires calculating overlapping weeks
@@ -817,15 +843,140 @@ class FeeCalculatorService
                 // Calculate total discount based on overlapping weeks and weekly amount
                 $totalDiscount = $overlapWeeks * $rule->discount_value;
                 // Ensure discount doesn't exceed the total accommodation cost for those weeks
-                // Note: $baseAmount here is the *total* accommodation cost, not per week.
-                // We need the weekly price to cap the discount correctly per week, but for simplicity,
-                // we'll cap against the total base amount for now. A more precise calculation
-                // might be needed if discounts could make weekly price negative.
-                return min($baseAmount, $totalDiscount);
+                $discountAmount = min($baseAmount, $totalDiscount);
+                $this->addDiscount($rule->name, $discountAmount, $rule->applies_to);
+                return $discountAmount;
             }
         }
 
         return 0;
+    }
+
+    /**
+     * Calculate discounts for split quotes (multiple courses or accommodations).
+     * This applies the discount to each applicable item separately.
+     *
+     * @param DiscountRule $rule The discount rule to apply
+     * @return float The total discount amount
+     */
+    private function calculateSplitDiscountAmount(DiscountRule $rule): float
+    {
+        $totalDiscount = 0;
+
+        if ($rule->applies_to === 'course_tuition' && !empty($this->costBreakdown['courses'])) {
+            // Apply discount to each course separately
+            foreach ($this->costBreakdown['courses'] as $index => $course) {
+                // Check if this course meets any specific course conditions
+                if ($rule->course_id !== null && $rule->course_id != $course['course_id']) {
+                    continue; // Skip if rule is for a specific course and this isn't it
+                }
+
+                // Check course duration conditions
+                if ($rule->min_course_weeks !== null && $course['duration_weeks'] < $rule->min_course_weeks) {
+                    continue;
+                }
+                if ($rule->max_course_weeks !== null && $course['duration_weeks'] > $rule->max_course_weeks) {
+                    continue;
+                }
+
+                // Calculate discount for this course
+                $baseAmount = $course['fee'];
+                if ($baseAmount <= 0) continue;
+
+                $discountAmount = 0;
+                if ($rule->discount_type === 'percentage') {
+                    $discountAmount = ($baseAmount * $rule->discount_value) / 100;
+                } elseif ($rule->discount_type === 'fixed_amount') {
+                    $discountAmount = min($baseAmount, $rule->discount_value);
+                } elseif ($rule->discount_type === 'fee_waiver') {
+                    $discountAmount = $baseAmount;
+                }
+
+                if ($discountAmount > 0) {
+                    // Add this course's discount with specific course details
+                    $this->addDiscount(
+                        $rule->name,
+                        $discountAmount,
+                        $rule->applies_to,
+                        $index,
+                        $course['course_name']
+                    );
+                    $totalDiscount += $discountAmount;
+                }
+            }
+        } elseif ($rule->applies_to === 'accommodation_price' && !empty($this->costBreakdown['accommodations'])) {
+            // Apply discount to each accommodation separately
+            foreach ($this->costBreakdown['accommodations'] as $index => $accommodation) {
+                // Check if this accommodation meets any specific accommodation conditions
+                if ($rule->accommodation_id !== null && $rule->accommodation_id != $accommodation['accommodation_id']) {
+                    continue; // Skip if rule is for a specific accommodation and this isn't it
+                }
+
+                // Check accommodation duration conditions
+                if ($rule->min_accommodation_weeks !== null && $accommodation['duration_weeks'] < $rule->min_accommodation_weeks) {
+                    continue;
+                }
+                if ($rule->max_accommodation_weeks !== null && $accommodation['duration_weeks'] > $rule->max_accommodation_weeks) {
+                    continue;
+                }
+
+                // Calculate discount for this accommodation
+                $baseAmount = $accommodation['fee'];
+                if ($baseAmount <= 0) continue;
+
+                $discountAmount = 0;
+                if ($rule->discount_type === 'percentage') {
+                    $discountAmount = ($baseAmount * $rule->discount_value) / 100;
+                } elseif ($rule->discount_type === 'fixed_amount') {
+                    $discountAmount = min($baseAmount, $rule->discount_value);
+                } elseif ($rule->discount_type === 'fee_waiver') {
+                    $discountAmount = $baseAmount;
+                } elseif ($rule->discount_type === 'fixed_amount_per_week' &&
+                          $rule->valid_from_date && $rule->valid_to_date) {
+                    // For per-week discounts, we need to calculate overlap
+                    // Get the start date from the first course
+                    $startDate = null;
+                    if (!empty($this->costBreakdown['courses'])) {
+                        $firstCourse = collect($this->costBreakdown['courses'])->sortBy('sequence_order')->first();
+                        if ($firstCourse) {
+                            $startDate = Carbon::parse($firstCourse['start_date']);
+                        }
+                    }
+
+                    if ($startDate) {
+                        $accommodationEndDate = $startDate->copy()->addWeeks($accommodation['duration_weeks']);
+                        $discountStartDate = Carbon::parse($rule->valid_from_date);
+                        $discountEndDate = Carbon::parse($rule->valid_to_date);
+
+                        $overlapWeeks = $this->calculateOverlapWeeks(
+                            $startDate,
+                            $accommodationEndDate,
+                            $discountStartDate,
+                            $discountEndDate
+                        );
+
+                        if ($overlapWeeks > 0) {
+                            $weeklyDiscount = $overlapWeeks * $rule->discount_value;
+                            $discountAmount = min($baseAmount, $weeklyDiscount);
+                        }
+                    }
+                }
+
+                if ($discountAmount > 0) {
+                    // Add this accommodation's discount with specific accommodation details
+                    $this->addDiscount(
+                        $rule->name,
+                        $discountAmount,
+                        $rule->applies_to,
+                        $index,
+                        $accommodation['accommodation_name']
+                    );
+                    $totalDiscount += $discountAmount;
+                }
+            }
+        }
+
+        return $totalDiscount;
     }
 
      /**
@@ -888,16 +1039,39 @@ class FeeCalculatorService
 
      /**
       * Helper to add a discount to the cost breakdown.
+      *
+      * @param string $name The name of the discount
+      * @param float $amount The amount of the discount
+      * @param string $appliedTo What the discount applies to (course_tuition, accommodation_price, etc.)
+      * @param int|null $itemIndex Optional index of the specific course or accommodation
+      * @param string|null $itemName Optional name of the specific course or accommodation
       */
-     private function addDiscount(string $name, float $amount, string $appliedTo): void
+     private function addDiscount(string $name, float $amount, string $appliedTo, ?int $itemIndex = null, ?string $itemName = null): void
      {
          // Allow 0 amount only for waivers, otherwise amount must be positive
          if ($amount <= 0 && !str_ends_with($appliedTo, '_waiver')) return;
 
+         // Create a more descriptive name if we have item details
+         $displayName = $name;
+         if ($itemName) {
+             if ($appliedTo === 'course_tuition') {
+                 $displayName = $name . ' (' . $itemName . ')';
+             } elseif ($appliedTo === 'accommodation_price') {
+                 $displayName = $name . ' (' . $itemName . ')';
+             }
+         } elseif ($itemIndex !== null) {
+             if ($appliedTo === 'course_tuition') {
+                 $displayName = $name . ' (Course #' . ($itemIndex + 1) . ')';
+             } elseif ($appliedTo === 'accommodation_price') {
+                 $displayName = $name . ' (Accommodation #' . ($itemIndex + 1) . ')';
+             }
+         }
+
          $this->costBreakdown['discounts'][] = [
-             'name' => $name,
+             'name' => $displayName,
              'amount' => round($amount, 2), // Store as positive value representing deduction
              'applied_to' => $appliedTo,
+             'item_index' => $itemIndex,
          ];
      }
 
@@ -952,6 +1126,9 @@ class FeeCalculatorService
 
             // Initialize the cost breakdown structure for split selections
             $this->costBreakdown = [
+                'items' => [],  // Add items array for display in views
+                'courses' => [], // Add courses array for display in views
+                'accommodations' => [], // Add accommodations array for display in views
                 'course_fees' => [],
                 'accommodation_fees' => [],
                 'placement_fees' => [],
@@ -1108,22 +1285,50 @@ class FeeCalculatorService
             return;
         }
 
-        // Calculate course end date
-        $endDate = $startDate->copy()->addWeeks($durationWeeks);
+        // Calculate course end date (Friday of the last week)
+        // Start with Monday of the first week, add (duration-1) weeks to get to the Monday of the last week
+        // Then add 4 days to get to Friday of the last week
+        $endDate = $startDate->copy()->addWeeks($durationWeeks - 1)->addDays(4);
 
         // Calculate course fee
         $courseFee = $this->calculateCourseFeeForSelection($course, $startDate, $durationWeeks, $index);
 
         // Add to cost breakdown
         if ($courseFee > 0) {
-            $this->costBreakdown['course_fees'][] = [
+            // Store course details in the courses array for the view
+            if (!isset($this->costBreakdown['courses'])) {
+                $this->costBreakdown['courses'] = [];
+            }
+
+            $this->costBreakdown['courses'][$index] = [
                 'course_id' => $course->id,
                 'course_name' => $course->name,
+                'course_type_id' => $course->course_type_id,
                 'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
                 'duration_weeks' => $durationWeeks,
                 'fee' => $courseFee,
                 'sequence_order' => $index,
             ];
+
+            // Also store in course_fees for backward compatibility
+            $this->costBreakdown['course_fees'][] = [
+                'course_id' => $course->id,
+                'course_name' => $course->name,
+                'course_type_id' => $course->course_type_id,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'duration_weeks' => $durationWeeks,
+                'fee' => $courseFee,
+                'sequence_order' => $index,
+            ];
+
+            // If this is the first course, also set the course_start_date and course_end_date for backward compatibility
+            if ($index === 0) {
+                $this->costBreakdown['course_start_date'] = $startDate->format('Y-m-d');
+                $this->costBreakdown['course_end_date'] = $endDate->format('Y-m-d');
+                $this->costBreakdown['course_duration_weeks'] = $durationWeeks;
+            }
 
             $this->costBreakdown['subtotals']['tuition'] += $courseFee;
         }
@@ -1158,6 +1363,10 @@ class FeeCalculatorService
 
             $tuitionPrice = $price->price_per_week * $durationWeeks;
 
+            // Add the course to the items list with proper details
+            $itemName = $course->name . ' (' . $durationWeeks . ' weeks)';
+            $this->addItem($itemName, $tuitionPrice, 'tuition');
+
         } elseif ($course->pricing_type === 'fixed_schedule') {
             // Find the active schedule matching the exact start date and duration
             $schedule = CourseSchedule::where('course_id', $course->id)
@@ -1172,6 +1381,10 @@ class FeeCalculatorService
             }
 
             $tuitionPrice = $schedule->fixed_price;
+
+            // Add the course to the items list with proper details
+            $itemName = $course->name . ' (' . $schedule->start_date->format('Y-m-d') . ' - ' . $schedule->duration_weeks . ' weeks)';
+            $this->addItem($itemName, $tuitionPrice, 'tuition');
         }
 
         // Add Course Summer Supplement if applicable
@@ -1229,38 +1442,60 @@ class FeeCalculatorService
 
         // Add to cost breakdown
         if ($accommodationFee > 0) {
-            $this->costBreakdown['accommodation_fees'][] = [
+            // Store accommodation details in the accommodations array for the view
+            if (!isset($this->costBreakdown['accommodations'])) {
+                $this->costBreakdown['accommodations'] = [];
+            }
+
+            $this->costBreakdown['accommodations'][$index] = [
                 'accommodation_id' => $accommodation->id,
                 'accommodation_name' => $accommodation->name,
+                'accommodation_type' => $accommodation->type,
                 'duration_weeks' => $durationWeeks,
                 'fee' => $accommodationFee,
                 'sequence_order' => $index,
             ];
 
-            $this->costBreakdown['subtotals']['accommodation'] += $accommodationFee;
-        }
-
-        // Add Placement Fee (one per unique accommodation type)
-        $hasAccommFeeWaiver = collect($this->costBreakdown['discounts'])->contains('applied_to', 'accommodation_fee_waiver');
-
-        // Check if this accommodation type already has a placement fee
-        $placementFeeAdded = false;
-        foreach ($this->costBreakdown['placement_fees'] ?? [] as $placementFee) {
-            if ($placementFee['accommodation_id'] === $accommodation->id) {
-                $placementFeeAdded = true;
-                break;
-            }
-        }
-
-        if (!$placementFeeAdded && $this->school->accommodation_fee > 0 && !$hasAccommFeeWaiver) {
-            $this->costBreakdown['placement_fees'][] = [
+            // Also store in accommodation_fees for backward compatibility
+            $this->costBreakdown['accommodation_fees'][] = [
                 'accommodation_id' => $accommodation->id,
                 'accommodation_name' => $accommodation->name,
-                'fee' => $this->school->accommodation_fee,
+                'accommodation_type' => $accommodation->type,
+                'duration_weeks' => $durationWeeks,
+                'fee' => $accommodationFee,
+                'sequence_order' => $index,
             ];
 
-            $this->costBreakdown['subtotals']['fees'] += $this->school->accommodation_fee;
-            $this->addItem("Accommodation Placement Fee ({$accommodation->name})", $this->school->accommodation_fee, 'fees');
+            // If this is the first accommodation, also set the accommodation_duration_weeks for backward compatibility
+            if ($index === 0) {
+                $this->costBreakdown['accommodation_duration_weeks'] = $durationWeeks;
+            }
+
+            $this->costBreakdown['subtotals']['accommodation'] += $accommodationFee;
+
+            // Add the accommodation to the items list with proper details
+            $itemName = $accommodation->name . ' (' . $durationWeeks . ' weeks)';
+            $this->addItem($itemName, $accommodationFee, 'accommodation');
+        }
+
+        // Add Placement Fee (only once for the first accommodation)
+        $hasAccommFeeWaiver = collect($this->costBreakdown['discounts'])->contains('applied_to', 'accommodation_fee_waiver');
+
+        // Only add placement fee for the first accommodation (index 0)
+        if ($index === 0 && $this->school->accommodation_fee > 0 && !$hasAccommFeeWaiver) {
+            // Check if any placement fee has already been added
+            $placementFeeAdded = !empty($this->costBreakdown['placement_fees']);
+
+            if (!$placementFeeAdded) {
+                $this->costBreakdown['placement_fees'][] = [
+                    'accommodation_id' => $accommodation->id,
+                    'accommodation_name' => $accommodation->name,
+                    'fee' => $this->school->accommodation_fee,
+                ];
+
+                $this->costBreakdown['subtotals']['fees'] += $this->school->accommodation_fee;
+                $this->addItem("Accommodation Placement Fee", $this->school->accommodation_fee, 'fees');
+            }
         }
     }
 
@@ -1293,11 +1528,31 @@ class FeeCalculatorService
         // For now, we'll assume it starts with the first course
         // In a more advanced implementation, we might want to specify start dates for accommodations
         $startDate = null;
-        if (!empty($this->costBreakdown['course_fees'])) {
-            $firstCourse = collect($this->costBreakdown['course_fees'])->sortBy('sequence_order')->first();
-            if ($firstCourse) {
+
+        // First, try to get the start date from the courses array (used in split quotes)
+        if (!empty($this->costBreakdown['courses'])) {
+            $firstCourse = collect($this->costBreakdown['courses'])->sortBy('sequence_order')->first();
+            if ($firstCourse && isset($firstCourse['start_date'])) {
                 $startDate = Carbon::parse($firstCourse['start_date']);
             }
+        }
+
+        // If not found, try the course_fees array (used for backward compatibility)
+        if (!$startDate && !empty($this->costBreakdown['course_fees'])) {
+            $firstCourse = collect($this->costBreakdown['course_fees'])->sortBy('sequence_order')->first();
+            if ($firstCourse && isset($firstCourse['start_date'])) {
+                $startDate = Carbon::parse($firstCourse['start_date']);
+            }
+        }
+
+        // If still not found, try the course_start_date (used in single course quotes)
+        if (!$startDate && isset($this->costBreakdown['course_start_date'])) {
+            $startDate = Carbon::parse($this->costBreakdown['course_start_date']);
+        }
+
+        // If still not found, use the startDate property if available (from the main quote parameters)
+        if (!$startDate && $this->startDate) {
+            $startDate = $this->startDate;
         }
 
         if (!$startDate) {
